@@ -33,13 +33,14 @@ func (z *ZFSconfig) makeTemplates() (err error) {
 
 	initScript.WriteString("# Reference: FreeBSD Handbook 4th Edition - Chapter 17. Jails and Containers\n")
 	// Create root dataset
-	if z.Mountpoint != "" {
-		template.WriteCommand(initScript, "zfs create -o mountpoint={.Mountpoint} {.Dataset}", true)
-	}
+	initScript.WriteString("{{if .Mountpoint}}\n")
+	template.WriteCommand(initScript, "zfs create -o mountpoint={{.Mountpoint}} {{.Dataset}}", true)
+	initScript.WriteString("{{end}}\n")
+
 	// Create child datasets
-	template.WriteCommand(initScript, "zfs create {.Dataset}/media", true)      // Compressed FreeBSD release images
-	template.WriteCommand(initScript, "zfs create {.Dataset}/templates", true)  // FreeBSD userland templates used to create thin jails via snapshot + clone
-	template.WriteCommand(initScript, "zfs create {.Dataset}/containers", true) // Live jail containers
+	template.WriteCommand(initScript, "zfs create {{.Dataset}}/media", true)      // Compressed FreeBSD release images
+	template.WriteCommand(initScript, "zfs create {{.Dataset}}/templates", true)  // FreeBSD userland templates used to create thin jails via snapshot + clone
+	template.WriteCommand(initScript, "zfs create {{.Dataset}}/containers", true) // Live jail containers
 
 	return nil
 }

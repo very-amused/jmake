@@ -1,5 +1,0 @@
-# Reference: FreeBSD Handbook 4th Edition - Chapter 17. Jails and Containers
-sudo zfs create -o mountpoint={.Mountpoint} {.Dataset}
-sudo zfs create {.Dataset}/media
-sudo zfs create {.Dataset}/templates
-sudo zfs create {.Dataset}/containers
