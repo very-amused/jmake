@@ -20,7 +20,9 @@ func (z *ZFSconfig) makeTemplates() (err error) {
 	}
 
 	var (
-		initScript *bufio.Writer
+		initScript    *bufio.Writer
+		statusScript  *bufio.Writer
+		destroyScript *bufio.Writer
 	)
 
 	if file, err := os.Create(path.Join(jtmp.TemplateDir, jtmp.ZFSinit)); err != nil {
@@ -30,8 +32,28 @@ func (z *ZFSconfig) makeTemplates() (err error) {
 		initScript = bufio.NewWriter(file)
 		defer initScript.Flush()
 	}
+	if file, err := os.Create(path.Join(jtmp.TemplateDir, jtmp.ZFSstatus)); err != nil {
+		return err
+	} else {
+		defer file.Close()
+		statusScript = bufio.NewWriter(file)
+		defer statusScript.Flush()
+	}
+	if file, err := os.Create(path.Join(jtmp.TemplateDir, jtmp.ZFSdestroy)); err != nil {
+		return err
+	} else {
+		defer file.Close()
+		destroyScript = bufio.NewWriter(file)
+		defer destroyScript.Flush()
+	}
 
-	initScript.WriteString("# Reference: FreeBSD Handbook 4th Edition - Chapter 17. Jails and Containers\n")
+	initScript.WriteString("# Initialize jail ZFS datasets\n")
+
+	statusScript.WriteString("# View status for jail ZFS datasets\n")
+
+	destroyScript.WriteString("# Permanently destroy jail ZFS datasets (DANGER ZONE)\n")
+	destroyScript.WriteString("# This will only work if all live jail datasets (in {{.Dataset}}/containers) have been deleted\n")
+
 	// Create root dataset
 	initScript.WriteString("{{if .Mountpoint}}\n")
 	jtmp.WriteCommand(initScript, "zfs create -o mountpoint={{.Mountpoint}} {{.Dataset}}", true)
@@ -41,6 +63,17 @@ func (z *ZFSconfig) makeTemplates() (err error) {
 	jtmp.WriteCommand(initScript, "zfs create {{.Dataset}}/media", true)      // Compressed FreeBSD release images
 	jtmp.WriteCommand(initScript, "zfs create {{.Dataset}}/templates", true)  // FreeBSD userland templates used to create thin jails via snapshot + clone
 	jtmp.WriteCommand(initScript, "zfs create {{.Dataset}}/containers", true) // Live jail containers
+
+	// Get status
+	jtmp.WriteCommand(statusScript, "zfs list -r {{.Dataset}}", false)
+
+	// Destroy datasets
+	jtmp.WriteCommand(destroyScript, "zfs destroy {{.Dataset}}/containers", true) // Destroy containers non-recursively (only works if no live jail datasets exist)
+	jtmp.WriteCommand(destroyScript, "[ $? = 0 ] || exit", false)                 // EXIT if the previous action failed (indicating live jail datasets)
+
+	jtmp.WriteCommand(destroyScript, "zfs destroy -r {{.Dataset}}/templates", true) // Destroy templates (including snapshots)
+	jtmp.WriteCommand(destroyScript, "zfs destroy -r {{.Dataset}}/media", true)     // Destroy downloaded install media
+	jtmp.WriteCommand(destroyScript, "zfs destroy {{.Dataset}}", true)              // Finally, destroy the root dataset
 
 	return nil
 }
