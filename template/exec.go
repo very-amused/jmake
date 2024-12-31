@@ -13,14 +13,16 @@ import (
 func ExecTemplates(data any, templateNames ...string) {
 	for _, templateName := range templateNames {
 		tmp, err := template.ParseFiles(path.Join(TemplateDir, templateName))
+		outfile := strings.TrimSuffix(templateName, ".template")
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
+				// Clear out of date output files
+				os.Remove(outfile)
 				continue // Skip missing templates
 			}
 			log.Println(err)
 		}
 
-		outfile := strings.TrimSuffix(templateName, ".template")
 		file, err := os.Create(outfile)
 		if err != nil {
 			log.Println(err)
