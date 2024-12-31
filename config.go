@@ -29,7 +29,7 @@ func (c *Config) execTemplates() {
 		c.ZFS.execTemplates()
 
 		if c.Image != nil {
-			c.Image.execTemplates(c.ZFS)
+			c.Image.execTemplates(c)
 		}
 	}
 }

@@ -33,14 +33,14 @@ func (img *ImageConfig) makeTemplates(z *ZFSconfig) (err error) {
 		defer initScript.Flush()
 	}
 
-	initScript.WriteString("# Initialize a FreeBSD {{.Release}} image for customization and jail deployment\n\n")
+	initScript.WriteString("# Initialize a FreeBSD {{.Image.Release}} image for customization and jail deployment\n\n")
 
 	// Absolute path to compressed base.txz
-	const base = "{{.Mountpoint}}/media/FreeBSD-{{.Release}}-base.txz"
+	const base = "{{.ZFS.Mountpoint}}/media/FreeBSD-{{.Image.Release}}-base.txz"
 	// Absolute path to extracted base.txz template
-	const tmp = "{{.Mountpoint}}/templates/FreeBSD-{{.Release}}"
+	const tmp = "{{.ZFS.Mountpoint}}/templates/FreeBSD-{{.Image.Release}}"
 	// ZFS dataset name for extracted base.txz template
-	const tmpDataset = "{{.Dataset}}/templates/FreeBSD-{{.Release}}"
+	const tmpDataset = "{{.ZFS.Dataset}}/templates/FreeBSD-{{.Image.Release}}"
 
 	initScript.WriteString("# Create image dataset\n")
 	jtmp.WriteCommand(initScript, fmt.Sprintf("zfs create %s", tmpDataset), true)
@@ -66,6 +66,6 @@ func (img *ImageConfig) makeTemplates(z *ZFSconfig) (err error) {
 	return nil
 }
 
-func (img *ImageConfig) execTemplates(z *ZFSconfig) {
-	jtmp.ExecTemplates([]any{z, img}, jtmp.ImageInit, jtmp.ImageRemove)
+func (img *ImageConfig) execTemplates(c *Config) {
+	jtmp.ExecTemplates(c, jtmp.ImageInit, jtmp.ImageRemove)
 }
