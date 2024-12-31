@@ -10,12 +10,12 @@ import (
 	jtmp "github.com/very-amused/jmake/template"
 )
 
-type ImageConfig struct {
+type ImgConfig struct {
 	Release  string // FreeBSD release string (e.g 14.2-RELEASE) to deploy from
 	Snapshot string // A snapshot name to deploy from. Set to `base` if no image customization is desired
 }
 
-func (img *ImageConfig) makeTemplates(z *ZFSconfig) (err error) {
+func (img *ImgConfig) makeTemplates(z *ZFSconfig) (err error) {
 	if img.Release == "" || z.Dataset == "" || z.Mountpoint == "" {
 		return nil
 	}
@@ -25,7 +25,7 @@ func (img *ImageConfig) makeTemplates(z *ZFSconfig) (err error) {
 		//removeScript *bufio.Writer
 	)
 
-	if file, err := os.Create(path.Join(jtmp.TemplateDir, jtmp.ImageInit)); err != nil {
+	if file, err := os.Create(path.Join(jtmp.TemplateDir, jtmp.ImgInit)); err != nil {
 		return err
 	} else {
 		defer file.Close()
@@ -33,14 +33,14 @@ func (img *ImageConfig) makeTemplates(z *ZFSconfig) (err error) {
 		defer initScript.Flush()
 	}
 
-	initScript.WriteString("# Initialize a FreeBSD {{.Image.Release}} image for customization and jail deployment\n\n")
+	initScript.WriteString("# Initialize a FreeBSD {{.Img.Release}} image for customization and jail deployment\n\n")
 
 	// Absolute path to compressed base.txz
-	const base = "{{.ZFS.Mountpoint}}/media/FreeBSD-{{.Image.Release}}-base.txz"
+	const base = "{{.ZFS.Mountpoint}}/media/FreeBSD-{{.Img.Release}}-base.txz"
 	// Absolute path to extracted base.txz template
-	const tmp = "{{.ZFS.Mountpoint}}/templates/FreeBSD-{{.Image.Release}}"
+	const tmp = "{{.ZFS.Mountpoint}}/templates/FreeBSD-{{.Img.Release}}"
 	// ZFS dataset name for extracted base.txz template
-	const tmpDataset = "{{.ZFS.Dataset}}/templates/FreeBSD-{{.Image.Release}}"
+	const tmpDataset = "{{.ZFS.Dataset}}/templates/FreeBSD-{{.Img.Release}}"
 
 	initScript.WriteString("# Create image dataset\n")
 	jtmp.WriteCommand(initScript, fmt.Sprintf("zfs create %s", tmpDataset), true)
@@ -66,6 +66,6 @@ func (img *ImageConfig) makeTemplates(z *ZFSconfig) (err error) {
 	return nil
 }
 
-func (img *ImageConfig) execTemplates(c *Config) {
-	jtmp.ExecTemplates(c, jtmp.ImageInit, jtmp.ImageRemove)
+func (img *ImgConfig) execTemplates(c *Config) {
+	jtmp.ExecTemplates(c, jtmp.ImgInit, jtmp.ImgRemove)
 }

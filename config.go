@@ -4,8 +4,8 @@ import "github.com/BurntSushi/toml"
 
 // A full jmake.toml config
 type Config struct {
-	ZFS   *ZFSconfig
-	Image *ImageConfig
+	ZFS *ZFSconfig
+	Img *ImgConfig
 }
 
 func (c *Config) makeTemplates() (errs []error) {
@@ -15,8 +15,8 @@ func (c *Config) makeTemplates() (errs []error) {
 			errs = append(errs, err)
 		}
 
-		if c.Image != nil {
-			if err := c.Image.makeTemplates(c.ZFS); err != nil {
+		if c.Img != nil {
+			if err := c.Img.makeTemplates(c.ZFS); err != nil {
 				errs = append(errs, err)
 			}
 		}
@@ -28,8 +28,8 @@ func (c *Config) execTemplates() {
 	if c.ZFS != nil {
 		c.ZFS.execTemplates()
 
-		if c.Image != nil {
-			c.Image.execTemplates(c)
+		if c.Img != nil {
+			c.Img.execTemplates(c)
 		}
 	}
 }
