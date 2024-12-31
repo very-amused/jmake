@@ -1,7 +1,25 @@
 package main
 
-import "fmt"
+import (
+	"log"
+	"os"
+
+	"github.com/very-amused/jmake/template"
+)
 
 func main() {
-	fmt.Println("Hello FreeBSD")
+	// Output to stderr
+	log.SetOutput(os.Stderr)
+
+	// Init template dir
+	var err error
+	if err = template.CreateTemplateDir(); err != nil {
+		log.Fatalln("Failed to initialize template dir:", err)
+	}
+
+	// Parse jmake.conf
+	jmake := ParseConfig()
+
+	// Write templates
+	jmake.makeTemplates()
 }

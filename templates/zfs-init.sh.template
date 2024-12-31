@@ -1,0 +1,4 @@
+# zfs create -o mountpoint=/jail zroot/jail
+# zfs create zroot/jail/media
+# zfs create zroot/jail/templates
+# zfs create zroot/jail/containers
