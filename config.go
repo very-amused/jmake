@@ -4,7 +4,8 @@ import "github.com/BurntSushi/toml"
 
 // A full jmake.toml config
 type Config struct {
-	ZFS *ZFSconfig
+	ZFS  *ZFSconfig
+	Sudo string
 }
 
 func (c *Config) makeTemplates() (errs []error) {
