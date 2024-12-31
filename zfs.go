@@ -5,7 +5,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/very-amused/jmake/template"
+	jtmp "github.com/very-amused/jmake/template"
 )
 
 // ZFS dataset configuration for creating thin jail images/containers.
@@ -23,7 +23,7 @@ func (z *ZFSconfig) makeTemplates() (err error) {
 		initScript *bufio.Writer
 	)
 
-	if file, err := os.Create(path.Join(template.TemplateDir, template.ZFSinit)); err != nil {
+	if file, err := os.Create(path.Join(jtmp.TemplateDir, jtmp.ZFSinit)); err != nil {
 		return err
 	} else {
 		defer file.Close()
@@ -34,13 +34,17 @@ func (z *ZFSconfig) makeTemplates() (err error) {
 	initScript.WriteString("# Reference: FreeBSD Handbook 4th Edition - Chapter 17. Jails and Containers\n")
 	// Create root dataset
 	initScript.WriteString("{{if .Mountpoint}}\n")
-	template.WriteCommand(initScript, "zfs create -o mountpoint={{.Mountpoint}} {{.Dataset}}", true)
+	jtmp.WriteCommand(initScript, "zfs create -o mountpoint={{.Mountpoint}} {{.Dataset}}", true)
 	initScript.WriteString("{{end}}\n")
 
 	// Create child datasets
-	template.WriteCommand(initScript, "zfs create {{.Dataset}}/media", true)      // Compressed FreeBSD release images
-	template.WriteCommand(initScript, "zfs create {{.Dataset}}/templates", true)  // FreeBSD userland templates used to create thin jails via snapshot + clone
-	template.WriteCommand(initScript, "zfs create {{.Dataset}}/containers", true) // Live jail containers
+	jtmp.WriteCommand(initScript, "zfs create {{.Dataset}}/media", true)      // Compressed FreeBSD release images
+	jtmp.WriteCommand(initScript, "zfs create {{.Dataset}}/jtemplates", true) // FreeBSD userland jtemplates used to create thin jails via snapshot + clone
+	jtmp.WriteCommand(initScript, "zfs create {{.Dataset}}/containers", true) // Live jail containers
 
 	return nil
+}
+
+func (z *ZFSconfig) execTemplates() {
+	jtmp.ExecTemplates(z, jtmp.ZFSinit, jtmp.ZFSstatus, jtmp.ZFSdestroy)
 }

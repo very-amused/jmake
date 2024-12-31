@@ -4,9 +4,10 @@ import (
 	"os"
 )
 
-// A config section that generates template files
+// A config section that generates template files and then executes them with its values
 type TemplateGen interface {
-	makeTemplates()
+	makeTemplates() error
+	execTemplates() // Execute generated templates. Usually simply calls ExecTemplates
 }
 
 // Root template directory

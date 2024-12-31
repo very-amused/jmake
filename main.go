@@ -22,4 +22,6 @@ func main() {
 
 	// Write templates
 	jmake.makeTemplates()
+	// Execute templates
+	jmake.execTemplates()
 }

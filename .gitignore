@@ -1,3 +1,4 @@
 jmake
 jmake.toml
 templates
+*.sh
