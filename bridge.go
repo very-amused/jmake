@@ -53,7 +53,9 @@ func (b *BridgeConfig) makeTemplates(c *Config) (err error) {
 	}
 
 	rcFile.WriteString("# Bridge {{.Name}} config\n")
-	jtmp.WriteRc(rcFile, "ifconfig_{{.Name}}", "inet {{.networkPrefix.String()}} addm vtnet{{.bridgeNo}}")
+	vtnet := "vtnet{{.bridgeNo}}"
+	jtmp.WriteRc(rcFile, "ifconfig_{{.Name}}", fmt.Sprintf("inet {{.networkPrefix.String()}} addm %s", vtnet))
+	jtmp.WriteRc(rcFile, fmt.Sprintf("ifconfig_%s", vtnet), "up")
 
 	return nil
 }
