@@ -15,6 +15,8 @@ const ZFSdestroy = "zfs-destroy.sh.template"
 const ImgInit = "img-init.sh.template"
 const ImgRemove = "img-remove.sh.template"
 
+const BridgeRC = "bridge-rc.conf.template"
+
 // Create and clear templates dir
 func CreateTemplateDir() (e error) {
 	if e = os.RemoveAll(TemplateDir); e != nil {

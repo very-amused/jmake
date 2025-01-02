@@ -1,12 +1,18 @@
 package main
 
 import (
+	"bufio"
 	"encoding/binary"
 	"errors"
 	"fmt"
 	"math/bits"
 	"net/netip"
+	"os"
+	"path"
+	"regexp"
 	"strconv"
+
+	jtmp "github.com/very-amused/jmake/template"
 )
 
 type BridgeConfig struct {
@@ -17,17 +23,50 @@ type BridgeConfig struct {
 	IP      string // Bridge IP address (i.e "192.168.1.2")
 	Netmask string // Bridge IP subnet (i.e "24" or "255.255.255.0")
 
+	bridgeNo      int          // Parsed bridge interface number
 	networkPrefix netip.Prefix // Parsed CIDR network prefix for the bridge
 }
 
 func (b *BridgeConfig) makeTemplates(c *Config) (err error) {
+	if b.Name == "" {
+		return errors.New("missing bridge interface name")
+	}
+	// TODO: move these calls to execTemplates
 	if err = b.parsePrefix(); err != nil {
 		return err
 	}
+	if err = b.parseBridgeNo(); err != nil {
+		fmt.Println(err)
+		return err
+	}
 
-	fmt.Println(b.networkPrefix.String())
+	var (
+		rcFile *bufio.Writer
+	)
+
+	if file, err := os.Create(path.Join(jtmp.TemplateDir, jtmp.BridgeRC)); err != nil {
+		return err
+	} else {
+		defer file.Close()
+		rcFile = bufio.NewWriter(file)
+		defer rcFile.Flush()
+	}
+
+	rcFile.WriteString("# Bridge {{.Name}} config\n")
+	jtmp.WriteRc(rcFile, "ifconfig_{{.Name}}", "inet {{.networkPrefix.String()}} addm vtnet{{.bridgeNo}}")
 
 	return nil
+}
+
+func (b *BridgeConfig) parseBridgeNo() (err error) {
+	regex, err := regexp.Compile("([A-Za-z]+)(\\d+)")
+	if err != nil {
+		return err
+	}
+	if matches := regex.FindStringSubmatch(b.Name); len(matches) >= 3 {
+		b.bridgeNo, err = strconv.Atoi(matches[2])
+	}
+	return err
 }
 
 func (b *BridgeConfig) parsePrefix() (err error) {

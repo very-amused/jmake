@@ -29,8 +29,9 @@ func (c *Config) makeTemplates() (errs []error) {
 			errs = append(errs, err)
 		}
 	}
-	for _, bridge := range c.Bridge {
-		if err := bridge.makeTemplates(c); err != nil {
+	// We only need to make the template once; we'll execute it once for each bridge later on
+	if len(c.Bridge) > 0 {
+		if err := c.Bridge[0].makeTemplates(c); err != nil {
 			errs = append(errs, err)
 		}
 	}
