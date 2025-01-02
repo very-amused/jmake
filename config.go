@@ -1,6 +1,8 @@
 package main
 
-import "github.com/BurntSushi/toml"
+import (
+	"github.com/BurntSushi/toml"
+)
 
 // A full jmake.toml config
 type Config struct {
@@ -24,6 +26,11 @@ func (c *Config) makeTemplates() (errs []error) {
 	}
 	if c.Img != nil {
 		if err := c.Img.makeTemplates(c); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	for _, bridge := range c.Bridge {
+		if err := bridge.makeTemplates(c); err != nil {
 			errs = append(errs, err)
 		}
 	}
