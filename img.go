@@ -15,14 +15,16 @@ type ImgConfig struct {
 	Snapshot string // A snapshot name to deploy from. Set to `base` if no image customization is desired
 }
 
-func (img *ImgConfig) makeTemplates(z *ZFSconfig) (err error) {
-	if img.Release == "" || z.Dataset == "" || z.Mountpoint == "" {
+func (_ *ImgConfig) makeTemplates(c *Config) (err error) {
+	if c.Img.Release == "" {
+		return nil
+	} else if c.ZFS == nil || c.ZFS.Dataset == "" || c.ZFS.Mountpoint == "" {
 		return nil
 	}
 
 	var (
-		initScript *bufio.Writer
-		//removeScript *bufio.Writer
+		initScript   *bufio.Writer
+		removeScript *bufio.Writer
 	)
 
 	if file, err := os.Create(path.Join(jtmp.TemplateDir, jtmp.ImgInit)); err != nil {
@@ -32,36 +34,60 @@ func (img *ImgConfig) makeTemplates(z *ZFSconfig) (err error) {
 		initScript = bufio.NewWriter(file)
 		defer initScript.Flush()
 	}
+	if file, err := os.Create(path.Join(jtmp.TemplateDir, jtmp.ImgRemove)); err != nil {
+		return err
+	} else {
+		defer file.Close()
+		removeScript = bufio.NewWriter(file)
+		defer removeScript.Flush()
+	}
+
+	// Absolute path to compressed imgTar.txz
+	const imgTar = "{{.ZFS.Mountpoint}}/media/{{.Img.Release}}-base.txz"
+	// Absolute path to extracted base.txz template
+	const tmp = "{{.ZFS.Mountpoint}}/templates/{{.Img.Release}}"
+	// ZFS dataset name for extracted base.txz template
+	const tmpDataset = "{{.ZFS.Dataset}}/templates/{{.Img.Release}}"
+
+	// #region img-init
 
 	initScript.WriteString("# Initialize a FreeBSD {{.Img.Release}} image for customization and jail deployment\n\n")
 
-	// Absolute path to compressed base.txz
-	const base = "{{.ZFS.Mountpoint}}/media/FreeBSD-{{.Img.Release}}-base.txz"
-	// Absolute path to extracted base.txz template
-	const tmp = "{{.ZFS.Mountpoint}}/templates/FreeBSD-{{.Img.Release}}"
-	// ZFS dataset name for extracted base.txz template
-	const tmpDataset = "{{.ZFS.Dataset}}/templates/FreeBSD-{{.Img.Release}}"
-
-	initScript.WriteString("# Create image dataset\n")
+	// Create image dataset
 	jtmp.WriteCommand(initScript, fmt.Sprintf("zfs create %s", tmpDataset), true)
 
-	initScript.WriteString("# Download base.txz\n")
+	// Download compressed image
 	// TODO: These options should be configurable
 	const mirror = "https://download.freebsd.org/ftp"
 	const arch = "amd64/amd64"
-	url := strings.Join([]string{mirror, arch, img.Release, "base.txz"}, "/")
-	jtmp.WriteCommand(initScript, fmt.Sprintf("fetch %s -o %s", url, base), true)
+	url := strings.Join([]string{mirror, arch, "{{.Img.Release}}", "base.txz"}, "/")
+	jtmp.WriteCommand(initScript, fmt.Sprintf("fetch %s -o %s", url, imgTar), true)
 
-	initScript.WriteString("# Extract base.txz\n")
-	jtmp.WriteCommand(initScript, fmt.Sprintf("tar -xf %s -C %s --unlink", base, tmp), true)
+	// Extract compressed image to dataset
+	jtmp.WriteCommand(initScript, fmt.Sprintf("tar -xf %s -C %s --unlink", imgTar, tmp), true)
 
-	initScript.WriteString("# Prepare and update template\n")
+	// Configure and update template
 	jtmp.WriteCommand(initScript, fmt.Sprintf("cp /etc/resolv.conf %s/etc/resolv.conf", tmp), true)
 	jtmp.WriteCommand(initScript, fmt.Sprintf("cp /etc/localtime %s/etc/localtime", tmp), true)
 	jtmp.WriteCommand(initScript, fmt.Sprintf("freebsd-update -b %s/ fetch install", tmp), true)
 
-	initScript.WriteString("# Create vanilla image snapshot (useful to undo future modifications)\n")
+	// Create vanilla image snapshot
 	jtmp.WriteCommand(initScript, fmt.Sprintf("zfs snapshot %s@vanilla", tmpDataset), true)
+
+	// #endregion img-init
+
+	// #region img-remove
+
+	removeScript.WriteString("# Remove the downloaded FreeBSD {{.Img.Release}} image (requires that no jails depend depend on this image or its dataset)\n\n")
+
+	// Remove dataset
+	jtmp.WriteCommand(removeScript, fmt.Sprintf("zfs destroy -r %s", tmpDataset), true)
+	jtmp.WriteCommand(removeScript, "[ $? = 0 ] || exit", false) // Exit if the previous action failed
+
+	// Remove compressed image
+	jtmp.WriteCommand(removeScript, fmt.Sprintf("rm -f %s", imgTar), true)
+
+	// #endregion img-remove
 
 	return nil
 }

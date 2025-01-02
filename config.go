@@ -14,11 +14,10 @@ func (c *Config) makeTemplates() (errs []error) {
 		if err := c.ZFS.makeTemplates(); err != nil {
 			errs = append(errs, err)
 		}
-
-		if c.Img != nil {
-			if err := c.Img.makeTemplates(c.ZFS); err != nil {
-				errs = append(errs, err)
-			}
+	}
+	if c.Img != nil {
+		if err := c.Img.makeTemplates(c); err != nil {
+			errs = append(errs, err)
 		}
 	}
 
