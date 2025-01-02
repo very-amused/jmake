@@ -8,6 +8,12 @@ type Config struct {
 	Img *ImgConfig
 }
 
+// A config section capable of template gen
+type ConfigSection interface {
+	makeTemplates(c *Config) error
+	execTemplates(c *Config)
+}
+
 func (c *Config) makeTemplates() (errs []error) {
 	errs = make([]error, 0)
 	if c.ZFS != nil {
