@@ -4,8 +4,9 @@ import "github.com/BurntSushi/toml"
 
 // A full jmake.toml config
 type Config struct {
-	ZFS *ZFSconfig
-	Img *ImgConfig
+	ZFS    *ZFSconfig
+	Img    *ImgConfig
+	Bridge []BridgeConfig
 }
 
 // A config section capable of template gen
