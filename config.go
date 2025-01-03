@@ -54,12 +54,8 @@ func (c *Config) ExecTemplates() {
 		}
 	}
 	if len(c.Bridge) > 0 {
+		// Write cloned_interfaces rc
 		outfile := strings.TrimSuffix(jtmp.BridgeRC, ".template")
-		os.Remove(outfile)
-		for i := range c.Bridge {
-			c.Bridge[i].execTemplates(c)
-		}
-		content, _ := os.ReadFile(outfile)
 		if file, err := os.Create(outfile); err == nil {
 			rc := bufio.NewWriter(file)
 
@@ -68,9 +64,12 @@ func (c *Config) ExecTemplates() {
 				ifaces = append(ifaces, c.Bridge[i].Name)
 			}
 			jtmp.WriteRc(rc, "cloned_interfaces", strings.Join(ifaces, " "))
-			rc.Write(content)
 			rc.Flush()
 			file.Close()
+		}
+		// Write ifconfig for bridge interfaces
+		for i := range c.Bridge {
+			c.Bridge[i].execTemplates(c)
 		}
 	}
 }
