@@ -21,7 +21,7 @@ func main() {
 	jmake := ParseConfig()
 
 	// Write templates
-	jmake.makeTemplates()
+	jmake.MakeTemplates()
 	// Execute templates
-	jmake.execTemplates()
+	jmake.ExecTemplates()
 }
