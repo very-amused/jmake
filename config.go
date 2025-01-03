@@ -8,7 +8,7 @@ import (
 type Config struct {
 	ZFS    *ZFSconfig
 	Img    *ImgConfig
-	Bridge []BridgeConfig
+	Bridge map[string]*BridgeConfig
 }
 
 // A config section capable of template gen
@@ -30,8 +30,9 @@ func (c *Config) MakeTemplates() (errs []error) {
 			errs = append(errs, err)
 		}
 	}
-	for i := range c.Bridge {
-		if err := c.Bridge[i].makeTemplates(c); err != nil {
+	for name, bridge := range c.Bridge {
+		bridge.name = name
+		if err := bridge.makeTemplates(c); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -51,15 +52,15 @@ func (c *Config) ExecTemplates() {
 	if len(c.Bridge) > 0 {
 		// Write ifconfig for bridge interfaces
 		WriteBridgeConfigHeader(c)
-		for i := range c.Bridge {
-			c.Bridge[i].execTemplates(c)
+		for _, bridge := range c.Bridge {
+			bridge.execTemplates(c)
 		}
 	}
 }
 
 // Parse jmake.toml
-func ParseConfig() (c *Config) {
+func ParseConfig() (c *Config, e error) {
 	c = new(Config)
-	toml.DecodeFile("jmake.toml", &c)
-	return c
+	_, e = toml.DecodeFile("jmake.toml", &c)
+	return c, e
 }

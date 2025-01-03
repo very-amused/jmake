@@ -18,7 +18,10 @@ func main() {
 	}
 
 	// Parse jmake.conf
-	jmake := ParseConfig()
+	jmake, err := ParseConfig()
+	if err != nil {
+		log.Fatalln("Failed to parse jmake.toml:", err)
+	}
 
 	// Write templates
 	jmake.MakeTemplates()

@@ -30,7 +30,7 @@ func WriteBridgeConfigHeader(c *Config) {
 
 	var ifaces []string
 	for i := range c.Bridge {
-		ifaces = append(ifaces, c.Bridge[i].Name)
+		ifaces = append(ifaces, c.Bridge[i].name)
 	}
 	jtmp.WriteRc(rc, "cloned_interfaces", strings.Join(ifaces, " "))
 	rc.Flush()
@@ -38,7 +38,8 @@ func WriteBridgeConfigHeader(c *Config) {
 }
 
 type BridgeConfig struct {
-	Name        string // Bridge interface name (i.e "bridge0")
+	name string // Bridge interface name (i.e "bridge0") [parsed from toml key]
+
 	Description string // Bridge description for documentation purposes (i.e "DMZ")
 
 	Network string // Combined bridge IP + netmask (i.e "192.168.1.2/24")
@@ -59,21 +60,20 @@ type BridgeCtx struct {
 
 func (b *BridgeConfig) context() (ctx BridgeCtx) {
 	return BridgeCtx{
-		Name:          b.Name,
+		Name:          b.name,
 		Description:   b.Description,
 		BridgeNo:      b.bridgeNo,
 		NetworkPrefix: b.networkPrefix}
 }
 
 func (b *BridgeConfig) makeTemplates(_ *Config) (err error) {
-	if b.Name == "" {
+	if b.name == "" {
 		return errors.New("missing bridge interface name")
 	}
 	if err = b.parsePrefix(); err != nil {
 		return err
 	}
 	if err = b.parseBridgeNo(); err != nil {
-		fmt.Println(err)
 		return err
 	}
 
@@ -112,7 +112,7 @@ func (b *BridgeConfig) parseBridgeNo() (err error) {
 	if err != nil {
 		return err
 	}
-	if matches := regex.FindStringSubmatch(b.Name); len(matches) >= 3 {
+	if matches := regex.FindStringSubmatch(b.name); len(matches) >= 3 {
 		b.bridgeNo, err = strconv.Atoi(matches[2])
 	}
 	return err
@@ -146,7 +146,7 @@ func (b *BridgeConfig) parsePrefix() (err error) {
 			return err
 		}
 
-		return fmt.Errorf("failed to parse netmask for bridge %s", b.Name)
+		return fmt.Errorf("failed to parse netmask for bridge %s", b.name)
 	}
 
 	return errors.New("missing both network and ip/netmask keys")
