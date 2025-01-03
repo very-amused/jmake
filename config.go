@@ -1,8 +1,8 @@
 package main
 
 import (
+	"bufio"
 	"os"
-	"path"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -51,10 +51,23 @@ func (c *Config) execTemplates() {
 		}
 	}
 	if len(c.Bridge) > 0 {
-		outfile := strings.TrimSuffix(path.Join(jtmp.TemplateDir, jtmp.BridgeRC), ".template")
+		outfile := strings.TrimSuffix(jtmp.BridgeRC, ".template")
 		os.Remove(outfile)
 		for i := range c.Bridge {
 			c.Bridge[i].execTemplates(c)
+		}
+		content, _ := os.ReadFile(outfile)
+		if file, err := os.Create(outfile); err == nil {
+			rc := bufio.NewWriter(file)
+
+			var ifaces []string
+			for i := range c.Bridge {
+				ifaces = append(ifaces, c.Bridge[i].Name)
+			}
+			jtmp.WriteRc(rc, "cloned_interfaces", strings.Join(ifaces, " "))
+			rc.Write(content)
+			rc.Flush()
+			file.Close()
 		}
 	}
 }
