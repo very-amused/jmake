@@ -27,17 +27,38 @@ type BridgeConfig struct {
 	networkPrefix netip.Prefix // Parsed CIDR network prefix for the bridge
 }
 
-func (b *BridgeConfig) makeTemplates(c *Config) (err error) {
+// Bridge template execution context obtained from (BridgeConfig *).context()
+type BridgeCtx struct {
+	Name          string
+	Description   string
+	BridgeNo      int
+	NetworkPrefix netip.Prefix
+}
+
+func (b *BridgeConfig) context() (ctx BridgeCtx) {
+	return BridgeCtx{
+		Name:          b.Name,
+		Description:   b.Description,
+		BridgeNo:      b.bridgeNo,
+		NetworkPrefix: b.networkPrefix}
+}
+
+func (b *BridgeConfig) makeTemplates(_ *Config) (err error) {
 	if b.Name == "" {
 		return errors.New("missing bridge interface name")
 	}
-	// TODO: move these calls to execTemplates
 	if err = b.parsePrefix(); err != nil {
 		return err
 	}
 	if err = b.parseBridgeNo(); err != nil {
 		fmt.Println(err)
 		return err
+	}
+
+	// Exit early if rc template has already been written
+	rcPath := path.Join(jtmp.TemplateDir, jtmp.BridgeRC)
+	if _, err = os.Stat(rcPath); err == nil {
+		return nil // template file exists
 	}
 
 	var (
@@ -52,12 +73,17 @@ func (b *BridgeConfig) makeTemplates(c *Config) (err error) {
 		defer rcFile.Flush()
 	}
 
-	rcFile.WriteString("# Bridge {{.Name}} config\n")
-	vtnet := "vtnet{{.bridgeNo}}"
-	jtmp.WriteRc(rcFile, "ifconfig_{{.Name}}", fmt.Sprintf("inet {{.networkPrefix.String()}} addm %s", vtnet))
+	rcFile.WriteString("# Bridge {{.Name}} ({{.Description}}) config\n")
+	vtnet := "vtnet{{.BridgeNo}}"
+	jtmp.WriteRc(rcFile, "ifconfig_{{.Name}}", fmt.Sprintf("inet {{.NetworkPrefix.String}} addm %s", vtnet))
 	jtmp.WriteRc(rcFile, fmt.Sprintf("ifconfig_%s", vtnet), "up")
 
 	return nil
+}
+
+func (b *BridgeConfig) execTemplates(c *Config) {
+	// TODO: append
+	jtmp.ExecTemplates(b.context(), jtmp.BridgeRC)
 }
 
 func (b *BridgeConfig) parseBridgeNo() (err error) {
@@ -73,10 +99,8 @@ func (b *BridgeConfig) parseBridgeNo() (err error) {
 
 func (b *BridgeConfig) parsePrefix() (err error) {
 	if b.Network != "" {
-		if b.networkPrefix, err = netip.ParsePrefix(b.Network); err != nil {
-			return err
-		}
-		return
+		b.networkPrefix, err = netip.ParsePrefix(b.Network)
+		return err
 	}
 
 	if b.IP != "" && b.Netmask != "" {

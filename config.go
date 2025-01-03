@@ -29,9 +29,8 @@ func (c *Config) makeTemplates() (errs []error) {
 			errs = append(errs, err)
 		}
 	}
-	// We only need to make the template once; we'll execute it once for each bridge later on
-	if len(c.Bridge) > 0 {
-		if err := c.Bridge[0].makeTemplates(c); err != nil {
+	for i := range c.Bridge {
+		if err := c.Bridge[i].makeTemplates(c); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -45,6 +44,9 @@ func (c *Config) execTemplates() {
 		if c.Img != nil {
 			c.Img.execTemplates(c)
 		}
+	}
+	for i := range c.Bridge {
+		c.Bridge[i].execTemplates(c)
 	}
 }
 
