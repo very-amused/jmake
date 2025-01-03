@@ -1,12 +1,7 @@
 package main
 
 import (
-	"bufio"
-	"os"
-	"strings"
-
 	"github.com/BurntSushi/toml"
-	jtmp "github.com/very-amused/jmake/template"
 )
 
 // A full jmake.toml config
@@ -54,20 +49,8 @@ func (c *Config) ExecTemplates() {
 		}
 	}
 	if len(c.Bridge) > 0 {
-		// Write cloned_interfaces rc
-		outfile := strings.TrimSuffix(jtmp.BridgeRC, ".template")
-		if file, err := os.Create(outfile); err == nil {
-			rc := bufio.NewWriter(file)
-
-			var ifaces []string
-			for i := range c.Bridge {
-				ifaces = append(ifaces, c.Bridge[i].Name)
-			}
-			jtmp.WriteRc(rc, "cloned_interfaces", strings.Join(ifaces, " "))
-			rc.Flush()
-			file.Close()
-		}
 		// Write ifconfig for bridge interfaces
+		WriteBridgeConfigHeader(c)
 		for i := range c.Bridge {
 			c.Bridge[i].execTemplates(c)
 		}

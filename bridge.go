@@ -11,9 +11,31 @@ import (
 	"path"
 	"regexp"
 	"strconv"
+	"strings"
 
 	jtmp "github.com/very-amused/jmake/template"
 )
+
+// Write bridge-rc.conf header (should come before execTemplates for each BridgeConfig)
+func WriteBridgeConfigHeader(c *Config) {
+	// Write cloned_interfaces rc
+	outfile := strings.TrimSuffix(jtmp.BridgeRC, ".template")
+	file, err := os.Create(outfile)
+	if err != nil {
+		return
+	}
+	rc := bufio.NewWriter(file)
+
+	rc.WriteString("# Place this file in /usr/local/etc/rc.d\n\n")
+
+	var ifaces []string
+	for i := range c.Bridge {
+		ifaces = append(ifaces, c.Bridge[i].Name)
+	}
+	jtmp.WriteRc(rc, "cloned_interfaces", strings.Join(ifaces, " "))
+	rc.Flush()
+	file.Close()
+}
 
 type BridgeConfig struct {
 	Name        string // Bridge interface name (i.e "bridge0")
@@ -75,7 +97,7 @@ func (b *BridgeConfig) makeTemplates(_ *Config) (err error) {
 
 	rcFile.WriteString("# Bridge {{.Name}} ({{.Description}}) config\n")
 	vtnet := "vtnet{{.BridgeNo}}"
-	jtmp.WriteRc(rcFile, "ifconfig_{{.Name}}", fmt.Sprintf("inet {{.NetworkPrefix.String}} addm %s", vtnet))
+	jtmp.WriteRc(rcFile, "ifconfig_{{.Name}}", fmt.Sprintf("inet {{.NetworkPrefix}} addm %s", vtnet))
 	jtmp.WriteRc(rcFile, fmt.Sprintf("ifconfig_%s", vtnet), "up")
 
 	return nil
