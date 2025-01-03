@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"github.com/BurntSushi/toml"
 )
 
@@ -9,6 +11,7 @@ type Config struct {
 	ZFS    *ZFSconfig
 	Img    *ImgConfig
 	Bridge map[string]*BridgeConfig
+	Jail   map[string]*JailConfig
 }
 
 // A config section capable of template gen
@@ -33,6 +36,13 @@ func (c *Config) MakeTemplates() (errs []error) {
 	for name, bridge := range c.Bridge {
 		bridge.name = name
 		if err := bridge.makeTemplates(c); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	for name, jail := range c.Jail {
+		jail.name = name
+		if err := jail.parseIPs(c.Bridge); err != nil {
+			log.Println(err)
 			errs = append(errs, err)
 		}
 	}
