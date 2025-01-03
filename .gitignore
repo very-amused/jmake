@@ -2,3 +2,4 @@ jmake
 jmake.toml
 templates
 *.sh
+*.conf

@@ -82,8 +82,7 @@ func (b *BridgeConfig) makeTemplates(_ *Config) (err error) {
 }
 
 func (b *BridgeConfig) execTemplates(c *Config) {
-	// TODO: append
-	jtmp.ExecTemplates(b.context(), jtmp.BridgeRC)
+	jtmp.ExecAppend(b.context(), jtmp.BridgeRC)
 }
 
 func (b *BridgeConfig) parseBridgeNo() (err error) {

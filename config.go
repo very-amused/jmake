@@ -1,7 +1,12 @@
 package main
 
 import (
+	"os"
+	"path"
+	"strings"
+
 	"github.com/BurntSushi/toml"
+	jtmp "github.com/very-amused/jmake/template"
 )
 
 // A full jmake.toml config
@@ -45,8 +50,12 @@ func (c *Config) execTemplates() {
 			c.Img.execTemplates(c)
 		}
 	}
-	for i := range c.Bridge {
-		c.Bridge[i].execTemplates(c)
+	if len(c.Bridge) > 0 {
+		outfile := strings.TrimSuffix(path.Join(jtmp.TemplateDir, jtmp.BridgeRC), ".template")
+		os.Remove(outfile)
+		for i := range c.Bridge {
+			c.Bridge[i].execTemplates(c)
+		}
 	}
 }
 
