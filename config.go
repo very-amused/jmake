@@ -22,7 +22,8 @@ type ConfigSection interface {
 	execTemplates(c *Config)
 }
 
-func (c *Config) makeTemplates() (errs []error) {
+// MakeTemplates - Make templates which can be executed with the loaded config
+func (c *Config) MakeTemplates() (errs []error) {
 	errs = make([]error, 0)
 	if c.ZFS != nil {
 		if err := c.ZFS.makeTemplates(); err != nil {
@@ -42,7 +43,9 @@ func (c *Config) makeTemplates() (errs []error) {
 
 	return errs
 }
-func (c *Config) execTemplates() {
+
+// ExecTemplates - Execute config templates previous generated using MakeTemplates
+func (c *Config) ExecTemplates() {
 	if c.ZFS != nil {
 		c.ZFS.execTemplates()
 
