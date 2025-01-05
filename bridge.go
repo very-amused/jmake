@@ -78,7 +78,7 @@ func (b *BridgeConfig) makeTemplates(_ *Config) (err error) {
 	}
 
 	// Exit early if rc template has already been written
-	rcPath := path.Join(jtmp.TemplateDir, jtmp.BridgeRC)
+	rcPath := path.Join(jtmp.AutoTemplateDir, jtmp.BridgeRC)
 	if _, err = os.Stat(rcPath); err == nil {
 		return nil // template file exists
 	}
@@ -87,7 +87,7 @@ func (b *BridgeConfig) makeTemplates(_ *Config) (err error) {
 		rcFile *bufio.Writer
 	)
 
-	if file, err := os.Create(path.Join(jtmp.TemplateDir, jtmp.BridgeRC)); err != nil {
+	if file, err := os.Create(path.Join(jtmp.AutoTemplateDir, jtmp.BridgeRC)); err != nil {
 		return err
 	} else {
 		defer file.Close()

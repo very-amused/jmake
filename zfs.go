@@ -25,21 +25,21 @@ func (z *ZFSconfig) makeTemplates() (err error) {
 		destroyScript *bufio.Writer
 	)
 
-	if file, err := os.Create(path.Join(jtmp.TemplateDir, jtmp.ZFSinit)); err != nil {
+	if file, err := os.Create(path.Join(jtmp.AutoTemplateDir, jtmp.ZFSinit)); err != nil {
 		return err
 	} else {
 		defer file.Close()
 		initScript = bufio.NewWriter(file)
 		defer initScript.Flush()
 	}
-	if file, err := os.Create(path.Join(jtmp.TemplateDir, jtmp.ZFSstatus)); err != nil {
+	if file, err := os.Create(path.Join(jtmp.AutoTemplateDir, jtmp.ZFSstatus)); err != nil {
 		return err
 	} else {
 		defer file.Close()
 		statusScript = bufio.NewWriter(file)
 		defer statusScript.Flush()
 	}
-	if file, err := os.Create(path.Join(jtmp.TemplateDir, jtmp.ZFSdestroy)); err != nil {
+	if file, err := os.Create(path.Join(jtmp.AutoTemplateDir, jtmp.ZFSdestroy)); err != nil {
 		return err
 	} else {
 		defer file.Close()

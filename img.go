@@ -27,14 +27,14 @@ func (_ *ImgConfig) makeTemplates(c *Config) (err error) {
 		removeScript *bufio.Writer
 	)
 
-	if file, err := os.Create(path.Join(jtmp.TemplateDir, jtmp.ImgInit)); err != nil {
+	if file, err := os.Create(path.Join(jtmp.AutoTemplateDir, jtmp.ImgInit)); err != nil {
 		return err
 	} else {
 		defer file.Close()
 		initScript = bufio.NewWriter(file)
 		defer initScript.Flush()
 	}
-	if file, err := os.Create(path.Join(jtmp.TemplateDir, jtmp.ImgRemove)); err != nil {
+	if file, err := os.Create(path.Join(jtmp.AutoTemplateDir, jtmp.ImgRemove)); err != nil {
 		return err
 	} else {
 		defer file.Close()

@@ -39,7 +39,6 @@ func (j *JailConfig) parseIPs(bridges map[string]*BridgeConfig) (err error) {
 		if !bridge.networkPrefix.Contains(addr) {
 			return fmt.Errorf("jail IP is outside bridge subnet: %s", configStr)
 		}
-		fmt.Println(hostID(addr, bridge.networkPrefix))
 		// Save parsed + verified addr
 		j.addrs[bridgeName] = addr
 	}
