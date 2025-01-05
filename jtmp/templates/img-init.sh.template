@@ -1,0 +1,3 @@
+{{.NeedsRoot}}
+# Initialize a FreeBSD {{.Img.Release}} image for customization and jail deployment
+zfs create {{template "img_dataset" .}}

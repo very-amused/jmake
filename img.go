@@ -15,6 +15,15 @@ type ImgConfig struct {
 	Snapshot string // A snapshot name to deploy from. Set to `base` if no image customization is desired
 }
 
+// ImgConfig context passed to templates
+type ImgContext struct {
+	Img     string // Path to dest folder where base image is extracted
+	Dataset string // ZFS dataset created for image dest folder
+	Tar     string // Path to base image archive
+
+	Check ContextChecks
+}
+
 func (_ *ImgConfig) makeTemplates(c *Config) (err error) {
 	if c.Img.Release == "" {
 		return nil

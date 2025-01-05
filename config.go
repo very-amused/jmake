@@ -12,6 +12,8 @@ type Config struct {
 	Img    *ImgConfig
 	Bridge map[string]*BridgeConfig
 	Jail   map[string]*JailConfig
+
+	ContextChecks
 }
 
 // A config section capable of template gen
@@ -61,16 +63,6 @@ func (c *Config) ExecTemplates() {
 			bridge.execTemplates(c)
 		}
 	}
-}
-
-// Check that a script is being run as root
-func (_ *Config) NeedsRoot() string {
-	return "if [ `id -u` != 0 ]; then echo 'This script must be run as root.'; exit 1; fi"
-}
-
-// Check that the previously run command succeeded
-func (_ *Config) CheckResult() string {
-	return "[ \"$?\" == 0 ] || exit 1"
 }
 
 // Parse jmake.toml
