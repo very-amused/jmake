@@ -7,7 +7,7 @@ import (
 	"path"
 	"strings"
 
-	jtmp "github.com/very-amused/jmake/template"
+	"github.com/very-amused/jmake/jtmp"
 )
 
 type ImgConfig struct {

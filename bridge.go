@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 
-	jtmp "github.com/very-amused/jmake/template"
+	"github.com/very-amused/jmake/jtmp"
 )
 
 // Write bridge-rc.conf header (should come before execTemplates for each BridgeConfig)

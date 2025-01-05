@@ -5,7 +5,7 @@ import (
 	"os"
 	"path"
 
-	jtmp "github.com/very-amused/jmake/template"
+	"github.com/very-amused/jmake/jtmp"
 )
 
 // ZFS dataset configuration for creating thin jail images/containers.

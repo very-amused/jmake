@@ -1,5 +1,5 @@
 # Initialize jail ZFS datasets
-{{.CheckRoot}}
+{{.NeedsRoot}}
 {{if .Mountpoint}}
 zfs create -o mountpoint={{.ZFS.Mountpoint}} {{.ZFS.Dataset}} # Root jail dataset
 {{end}}

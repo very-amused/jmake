@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/very-amused/jmake/template"
+	"github.com/very-amused/jmake/jtmp"
 )
 
 func main() {
@@ -13,7 +13,7 @@ func main() {
 
 	// Init template dir
 	var err error
-	if err = template.CreateTemplateDir(); err != nil {
+	if err = jtmp.CreateTemplateDir(); err != nil {
 		log.Fatalln("Failed to initialize template dir:", err)
 	}
 
