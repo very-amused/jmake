@@ -71,7 +71,7 @@ func (c *Config) ExecTemplates() {
 
 // Check that a script is being run as root
 func (_ *Config) NeedsRoot() string {
-	return "[ `id -u` != 0 ] || exit 1"
+	return "if [ `id -u` != 0 ]; then echo 'This script must be run as root.'; exit 1; fi"
 }
 
 // Check that the previously run command succeeded

@@ -1,5 +1,5 @@
-# Initialize jail ZFS datasets
 {{.NeedsRoot}}
+# Initialize jail ZFS datasets
 zfs create -o mountpoint={{.ZFS.Mountpoint}} {{.ZFS.Dataset}} # Root jail dataset
 
 zfs create {{.ZFS.Dataset}}/media # Compressed FreeBSD release images
