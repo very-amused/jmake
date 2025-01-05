@@ -10,5 +10,5 @@ func (_ *ContextChecks) NeedsRoot() string {
 
 // Check that the previously run command succeeded
 func (_ *ContextChecks) CheckResult() string {
-	return "[ \"$?\" == 0 ] || exit 1"
+	return "if [ \"$?\" != 0 ]; then echo 'Previous command failed, exiting.'; exit 1; fi"
 }

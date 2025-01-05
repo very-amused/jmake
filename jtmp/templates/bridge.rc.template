@@ -1,0 +1,2 @@
+# Bridge {{.Name}} ({{.Description}}) config
+ifconfig_{{.Name}}=""

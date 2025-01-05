@@ -2,6 +2,7 @@
 # Initialize a FreeBSD {{.Release}} image for customization and jail deployment
 zfs create {{.Dataset}} # Create image dataset
 fetch {{.TarURL}} -o {{.Tar}} # Download base tarball
+{{.CheckResult}}
 tar -xf {{.Tar}} -C {{.Path}}  --unlink # Extract base tarball to dataset
 
 # Copy host DNS and timezone to image

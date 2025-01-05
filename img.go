@@ -15,7 +15,7 @@ type ImgConfig struct {
 
 	ContextChecks
 
-	zfs *ZFSconfig `toml:"-"` // ptr to ZFS config
+	zfs *ZFSconfig // ptr to ZFS config
 }
 
 // Path to image root folder (where the image's base.txz is extracted)
