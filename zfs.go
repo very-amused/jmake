@@ -14,6 +14,20 @@ type ZFSconfig struct {
 	Mountpoint string // Root jail mountpoint
 }
 
+func (_ *ZFSconfig) Generate(c *Config) (errs []error) {
+	if c.ZFS.Dataset == "" {
+		return nil
+	}
+
+	if c.ZFS.Mountpoint != "" {
+		errs = append(errs, jtmp.ExecTemplates(c, jtmp.ZFSinit)...)
+	}
+	errs = append(errs, jtmp.ExecTemplates(c, jtmp.ZFSstatus, jtmp.ZFSdestroy)...)
+	return errs
+}
+
+// #region legacy
+
 func (z *ZFSconfig) makeTemplates() (err error) {
 	if z.Dataset == "" {
 		return nil
@@ -79,5 +93,7 @@ func (z *ZFSconfig) makeTemplates() (err error) {
 }
 
 func (z *ZFSconfig) execTemplates() {
-	jtmp.ExecTemplates(z, jtmp.ZFSinit, jtmp.ZFSstatus, jtmp.ZFSdestroy)
+	jtmp.ExecAutoTemplates(z, jtmp.ZFSinit, jtmp.ZFSstatus, jtmp.ZFSdestroy)
 }
+
+// #endregion

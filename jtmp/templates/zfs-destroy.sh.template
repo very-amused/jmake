@@ -1,8 +1,8 @@
 # Permanently destroy jail ZFS datasets (DANGER ZONE)
-# This will only work if all live jail datasets (in {{.Dataset}}/containers) have been deleted
+# This will only work if all live jail datasets (in {{.ZFS.Dataset}}/containers) have been deleted
 {{.NeedsRoot}}
 zfs destroy {{.ZFS.Dataset}}/containers # Destroy containers non-recursively (succeeds iff no live jail datasets exist)
-{{.CheckOK}} # Exit if the previous command failed
+{{.CheckResult}} # Exit if the previous command failed
 zfs destroy -r {{.ZFS.Dataset}}/templates # Destroy templates (including snapshots)
 zfs destroy -r {{.ZFS.Dataset}}/media # Destroy downloaded install media
 zfs destroy {{.ZFS.Dataset}} # Destroy the root jail dataset

@@ -54,6 +54,7 @@ func (c *Config) MakeTemplates() (errs []error) {
 func (c *Config) ExecTemplates() {
 	if c.ZFS != nil {
 		c.ZFS.execTemplates()
+		c.ZFS.Generate(c)
 
 		if c.Img != nil {
 			c.Img.execTemplates(c)
@@ -66,6 +67,16 @@ func (c *Config) ExecTemplates() {
 			bridge.execTemplates(c)
 		}
 	}
+}
+
+// Check that a script is being run as root
+func (_ *Config) NeedsRoot() string {
+	return "[ `id -u` != 0 ] || exit 1"
+}
+
+// Check that the previously run command succeeded
+func (_ *Config) CheckResult() string {
+	return "[ \"$?\" == 0 ] || exit 1"
 }
 
 // Parse jmake.toml

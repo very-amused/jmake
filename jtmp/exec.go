@@ -10,7 +10,7 @@ import (
 )
 
 // Execute templates using text/template
-func ExecTemplates(data any, templateNames ...string) {
+func ExecAutoTemplates(data any, templateNames ...string) {
 	for _, templateName := range templateNames {
 		tmp, err := template.New(templateName).ParseFiles(path.Join(AutoTemplateDir, templateName))
 		outfile := strings.TrimSuffix(templateName, ".template")

@@ -93,5 +93,5 @@ func (_ *ImgConfig) makeTemplates(c *Config) (err error) {
 }
 
 func (img *ImgConfig) execTemplates(c *Config) {
-	jtmp.ExecTemplates(c, jtmp.ImgInit, jtmp.ImgRemove)
+	jtmp.ExecAutoTemplates(c, jtmp.ImgInit, jtmp.ImgRemove)
 }
