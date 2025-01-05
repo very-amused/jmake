@@ -1,10 +1,7 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
 	"net/url"
-	"os"
 	"path"
 
 	"github.com/very-amused/jmake/jtmp"
@@ -59,56 +56,6 @@ func (img *ImgConfig) Generate(c *Config) (errs []error) {
 		img.Mirror = "https://download.freebsd.org/ftp/"
 	}
 
-	errs = append(errs, jtmp.ExecTemplates(img, jtmp.ImgInit)...)
+	errs = append(errs, jtmp.ExecTemplates(img, jtmp.ImgInit, jtmp.ImgRemove)...)
 	return errs
 }
-
-// #region legacy
-
-func (_ *ImgConfig) makeTemplates(c *Config) (err error) {
-	if c.Img.Release == "" {
-		return nil
-	} else if c.ZFS == nil || c.ZFS.Dataset == "" || c.ZFS.Mountpoint == "" {
-		return nil
-	}
-
-	var (
-		removeScript *bufio.Writer
-	)
-
-	if file, err := os.Create(path.Join(jtmp.AutoTemplateDir, jtmp.ImgRemove)); err != nil {
-		return err
-	} else {
-		defer file.Close()
-		removeScript = bufio.NewWriter(file)
-		defer removeScript.Flush()
-	}
-
-	// Absolute path to compressed imgTar.txz
-	const imgTar = "{{.ZFS.Mountpoint}}/media/{{.Img.Release}}-base.txz"
-	// Absolute path to extracted base.txz template
-	const tmp = "{{.ZFS.Mountpoint}}/templates/{{.Img.Release}}"
-	// ZFS dataset name for extracted base.txz template
-	const tmpDataset = "{{.ZFS.Dataset}}/templates/{{.Img.Release}}"
-
-	// #region img-remove
-
-	removeScript.WriteString("# Remove the downloaded FreeBSD {{.Img.Release}} image (requires that no jails depend depend on this image or its dataset)\n\n")
-
-	// Remove dataset
-	jtmp.WriteCommand(removeScript, fmt.Sprintf("zfs destroy -r %s", tmpDataset), true)
-	jtmp.WriteCommand(removeScript, "[ $? = 0 ] || exit", false) // Exit if the previous action failed
-
-	// Remove compressed image
-	jtmp.WriteCommand(removeScript, fmt.Sprintf("rm -f %s", imgTar), true)
-
-	// #endregion img-remove
-
-	return nil
-}
-
-func (img *ImgConfig) execTemplates(c *Config) {
-	jtmp.ExecAutoTemplates(c, jtmp.ImgRemove)
-}
-
-// #endregion

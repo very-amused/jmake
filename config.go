@@ -25,11 +25,6 @@ type ConfigSection interface {
 // MakeTemplates - Make templates which can be executed with the loaded config
 func (c *Config) MakeTemplates() (errs []error) {
 	errs = make([]error, 0)
-	if c.Img != nil {
-		if err := c.Img.makeTemplates(c); err != nil {
-			errs = append(errs, err)
-		}
-	}
 	for name, bridge := range c.Bridge {
 		bridge.name = name
 		if err := bridge.makeTemplates(c); err != nil {
@@ -51,10 +46,6 @@ func (c *Config) MakeTemplates() (errs []error) {
 func (c *Config) ExecTemplates() {
 	if c.ZFS != nil {
 		c.ZFS.Generate(c)
-
-		if c.Img != nil {
-			c.Img.execTemplates(c)
-		}
 	}
 	if c.Img != nil {
 		if errs := c.Img.Generate(c); len(errs) > 0 {

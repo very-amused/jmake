@@ -1,0 +1,5 @@
+{{.NeedsRoot}}
+# Remove a downloaded FreeBSD {{.Release}} (requires that no jails depend on this image or its dataset)
+zfs destroy -r {{.Dataset}} # Destroy image dataset
+{{.CheckResult}}
+rm -f {{.Tar}} # Remove image tarball
