@@ -1,0 +1,2 @@
+# View status for jail ZFS datasets
+zfs list -r {{.ZFS.Dataset}}

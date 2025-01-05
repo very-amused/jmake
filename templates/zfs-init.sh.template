@@ -1,0 +1,8 @@
+# Initialize jail ZFS datasets
+{{.CheckRoot}}
+{{if .Mountpoint}}
+zfs create -o mountpoint={{.ZFS.Mountpoint}} {{.ZFS.Dataset}} # Root jail dataset
+{{end}}
+zfs create {{.ZFS.Dataset}}/media # Compressed FreeBSD release images
+zfs create {{.ZFS.Dataset}}/templates # FreeBSD userland templates (used to create thin jails via snapshot + clone)
+zfs create {{.ZFS.Dataset}}/containers # Live jail containers

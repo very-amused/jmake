@@ -1,6 +1,5 @@
 jmake
 jmake.toml
-templates
 templates-auto
 *.sh
 *.conf
