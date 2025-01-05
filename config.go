@@ -56,6 +56,13 @@ func (c *Config) ExecTemplates() {
 			c.Img.execTemplates(c)
 		}
 	}
+	if c.Img != nil {
+		if errs := c.Img.Generate(c); len(errs) > 0 {
+			for _, err := range errs {
+				log.Println(err)
+			}
+		}
+	}
 	if len(c.Bridge) > 0 {
 		// Write ifconfig for bridge interfaces
 		WriteBridgeConfigHeader(c)

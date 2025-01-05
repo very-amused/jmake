@@ -1,3 +1,12 @@
 {{.NeedsRoot}}
-# Initialize a FreeBSD {{.Img.Release}} image for customization and jail deployment
-zfs create {{template "img_dataset" .}}
+# Initialize a FreeBSD {{.Release}} image for customization and jail deployment
+zfs create {{.Dataset}} # Create image dataset
+fetch {{.TarURL}} -o {{.Tar}} # Download base tarball
+tar -xf {{.Tar}} -C {{.Path}}  --unlink # Extract base tarball to dataset
+
+# Copy host DNS and timezone to image
+cp /etc/resolv.conf {{.Path}}/etc/resolv.conf
+cp /etc/localtime {{.Path}}/etc/localtime
+
+freebsd-update -b {{.Path}}/ fetch install # Update image
+zfs snapshot {{.Dataset}}@vanilla # Create vanilla image snapshot

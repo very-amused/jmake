@@ -3,9 +3,9 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"net/url"
 	"os"
 	"path"
-	"strings"
 
 	"github.com/very-amused/jmake/jtmp"
 )
@@ -13,16 +13,57 @@ import (
 type ImgConfig struct {
 	Release  string // FreeBSD release string (e.g 14.2-RELEASE) to deploy from
 	Snapshot string // A snapshot name to deploy from. Set to `base` if no image customization is desired
+	Arch     string // FreeBSD architecture string (default: "amd64/amd64")
+	Mirror   string // FreeBSD download mirror (default: https://download.freebsd.org/ftp/)
+
+	ContextChecks
+
+	zfs *ZFSconfig `toml:"-"` // ptr to ZFS config
 }
 
-// ImgConfig context passed to templates
-type ImgContext struct {
-	Img     string // Path to dest folder where base image is extracted
-	Dataset string // ZFS dataset created for image dest folder
-	Tar     string // Path to base image archive
-
-	Check ContextChecks
+// Path to image root folder (where the image's base.txz is extracted)
+func (img *ImgConfig) Path() string {
+	return path.Join(img.zfs.Mountpoint, "templates", img.Release)
 }
+
+// Path to compressed image base tarball
+func (img *ImgConfig) Tar() string {
+	return path.Join(img.zfs.Mountpoint, "media", img.Release+"-base.txz")
+}
+
+// Base tarball download URL
+func (img *ImgConfig) TarURL() string {
+	tarURL, _ := url.JoinPath(img.Mirror, img.Arch, img.Release, "base.txz")
+	return tarURL
+}
+
+// Name of image ZFS dataset
+func (img *ImgConfig) Dataset() string {
+	return path.Join(img.zfs.Dataset, "templates", img.Release)
+}
+
+func (img *ImgConfig) Generate(c *Config) (errs []error) {
+	if img.Release == "" {
+		return nil
+	}
+	if c.ZFS == nil || c.ZFS.Mountpoint == "" || c.ZFS.Dataset == "" {
+		return nil
+	}
+	img.zfs = c.ZFS
+
+	// Set defaults (TODO: better default handling)
+	if img.Arch == "" {
+		img.Arch = "amd64/amd64"
+	}
+	if img.Mirror == "" {
+		img.Mirror = "https://download.freebsd.org/ftp/"
+	}
+
+	errs = append(errs, jtmp.ExecTemplates(img, jtmp.ImgInit)...)
+	return errs
+}
+
+// #region legacy
 
 func (_ *ImgConfig) makeTemplates(c *Config) (err error) {
 	if c.Img.Release == "" {
@@ -32,17 +73,9 @@ func (_ *ImgConfig) makeTemplates(c *Config) (err error) {
 	}
 
 	var (
-		initScript   *bufio.Writer
 		removeScript *bufio.Writer
 	)
 
-	if file, err := os.Create(path.Join(jtmp.AutoTemplateDir, jtmp.ImgInit)); err != nil {
-		return err
-	} else {
-		defer file.Close()
-		initScript = bufio.NewWriter(file)
-		defer initScript.Flush()
-	}
 	if file, err := os.Create(path.Join(jtmp.AutoTemplateDir, jtmp.ImgRemove)); err != nil {
 		return err
 	} else {
@@ -57,33 +90,6 @@ func (_ *ImgConfig) makeTemplates(c *Config) (err error) {
 	const tmp = "{{.ZFS.Mountpoint}}/templates/{{.Img.Release}}"
 	// ZFS dataset name for extracted base.txz template
 	const tmpDataset = "{{.ZFS.Dataset}}/templates/{{.Img.Release}}"
-
-	// #region img-init
-
-	initScript.WriteString("# Initialize a FreeBSD {{.Img.Release}} image for customization and jail deployment\n\n")
-
-	// Create image dataset
-	jtmp.WriteCommand(initScript, fmt.Sprintf("zfs create %s", tmpDataset), true)
-
-	// Download compressed image
-	// TODO: These options should be configurable
-	const mirror = "https://download.freebsd.org/ftp"
-	const arch = "amd64/amd64"
-	url := strings.Join([]string{mirror, arch, "{{.Img.Release}}", "base.txz"}, "/")
-	jtmp.WriteCommand(initScript, fmt.Sprintf("fetch %s -o %s", url, imgTar), true)
-
-	// Extract compressed image to dataset
-	jtmp.WriteCommand(initScript, fmt.Sprintf("tar -xf %s -C %s --unlink", imgTar, tmp), true)
-
-	// Configure and update template
-	jtmp.WriteCommand(initScript, fmt.Sprintf("cp /etc/resolv.conf %s/etc/resolv.conf", tmp), true)
-	jtmp.WriteCommand(initScript, fmt.Sprintf("cp /etc/localtime %s/etc/localtime", tmp), true)
-	jtmp.WriteCommand(initScript, fmt.Sprintf("freebsd-update -b %s/ fetch install", tmp), true)
-
-	// Create vanilla image snapshot
-	jtmp.WriteCommand(initScript, fmt.Sprintf("zfs snapshot %s@vanilla", tmpDataset), true)
-
-	// #endregion img-init
 
 	// #region img-remove
 
@@ -102,5 +108,7 @@ func (_ *ImgConfig) makeTemplates(c *Config) (err error) {
 }
 
 func (img *ImgConfig) execTemplates(c *Config) {
-	jtmp.ExecAutoTemplates(c, jtmp.ImgInit, jtmp.ImgRemove)
+	jtmp.ExecAutoTemplates(c, jtmp.ImgRemove)
 }
+
+// #endregion
