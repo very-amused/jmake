@@ -11,7 +11,7 @@ type Config struct {
 	ZFS    *ZFSconfig
 	Img    *ImgConfig
 	Bridge *BridgeConfigs
-	Jail   map[string]*JailConfig
+	Jail   *JailConfigs
 
 	Host *HostConfig
 
@@ -35,7 +35,7 @@ type ConfigSection interface {
 func (c *Config) Generate() {
 	// Generate output for all config sections supporting .Generate(c)
 	var errs []error
-	configSections := []ConfigSection{c.ZFS, c.Img, c.Bridge}
+	configSections := []ConfigSection{c.ZFS, c.Img, c.Bridge, c.Jail}
 	for _, section := range configSections {
 		if section == nil {
 			continue

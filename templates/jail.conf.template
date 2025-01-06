@@ -1,0 +1,19 @@
+# Permissions (TODO: make these configurable)
+allow.raw_sockets;
+exec.clean;
+mount.devfs;
+devfs_ruleset=5; # vnet ruleset
+
+{{range .}}
+# Jail {{.Name}} config
+{{.Name}} {
+	jid = {{.JID}};
+	path = "{{.Path}}";
+	host.hostname = "{{.Hostname}}";
+
+	# TODO: IPs
+
+	vnet; # Enable vnet networking
+}
+
+{{end}}

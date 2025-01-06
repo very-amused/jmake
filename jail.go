@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/netip"
+	"path"
 	"strconv"
 	"strings"
 )
@@ -17,11 +18,29 @@ type JailConfig struct {
 
 	// Jail IP addresses (indexed by the bridge on which they'll be added)
 	IP map[string]string
+
+	ContextChecks
+
+	zfs *ZFSconfig // ZFS config used for computing jail root path/dataset
+}
+
+// Path to jail root on host system
+func (j *JailConfig) Path() string {
+	return path.Join(j.zfs.Mountpoint, "containers", j.Name)
+}
+
+// Name of jail ZFS dataset
+func (j *JailConfig) Dataset() string {
+	return path.Join(j.zfs.Dataset, "containers", j.Name)
 }
 
 type JailConfigs map[string]*JailConfig
 
 func (jc *JailConfigs) Generate(c *Config) (errs []error) {
+	if c.ZFS == nil {
+		return errs
+	}
+
 	jid := 1
 	for name, jail := range *jc {
 		// Assign name + jid
@@ -40,6 +59,9 @@ func (jc *JailConfigs) Generate(c *Config) (errs []error) {
 		if err := jail.parseIPs(c.Bridge); err != nil {
 			errs = append(errs, err)
 		}
+
+		// Attach ZFS config
+		jail.zfs = c.ZFS
 	}
 
 	errs = append(errs, ExecTemplates(jc, JailConf)...)
