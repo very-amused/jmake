@@ -1,126 +1,47 @@
 package main
 
 import (
-	"bufio"
 	"encoding/binary"
 	"errors"
 	"fmt"
 	"math/bits"
 	"net/netip"
-	"os"
-	"path"
-	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/very-amused/jmake/jtmp"
 )
 
-// Write bridge-rc.conf header (should come before execTemplates for each BridgeConfig)
-func WriteBridgeConfigHeader(c *Config) {
-	// Write cloned_interfaces rc
-	outfile := strings.TrimSuffix(jtmp.BridgeRC, ".template")
-	file, err := os.Create(outfile)
-	if err != nil {
-		return
-	}
-	rc := bufio.NewWriter(file)
-
-	rc.WriteString("# Place this file in /usr/local/etc/rc.d\n\n")
-
-	var ifaces []string
-	for i := range c.Bridge {
-		ifaces = append(ifaces, c.Bridge[i].name)
-	}
-	jtmp.WriteRc(rc, "cloned_interfaces", strings.Join(ifaces, " "))
-	rc.Flush()
-	file.Close()
-}
-
 type BridgeConfig struct {
-	name string // Bridge interface name (i.e "bridge0") [parsed from toml key]
-
+	Name        string `toml:"-"` // Bridge interface name (i.e "bridge0") [parsed from toml key]
 	Description string // Bridge description for documentation purposes (i.e "DMZ")
 
 	Network string // Combined bridge IP + netmask (i.e "192.168.1.2/24")
 	IP      string // Bridge IP address (i.e "192.168.1.2")
 	Netmask string // Bridge IP subnet (i.e "24" or "255.255.255.0")
 
-	bridgeNo      int          // Parsed bridge interface number
-	networkPrefix netip.Prefix // Parsed CIDR network prefix for the bridge
+	Interfaces []string // Host interfaces attached to the bridge using addm directives
+
+	NetworkPrefix netip.Prefix `toml:"-"` // Parsed CIDR network prefix for the bridge
 }
 
-// Bridge template execution context obtained from (BridgeConfig *).context()
-type BridgeCtx struct {
-	Name          string
-	Description   string
-	BridgeNo      int
-	NetworkPrefix netip.Prefix
-}
+type BridgeConfigs map[string]*BridgeConfig
 
-func (b *BridgeConfig) context() (ctx BridgeCtx) {
-	return BridgeCtx{
-		Name:          b.name,
-		Description:   b.Description,
-		BridgeNo:      b.bridgeNo,
-		NetworkPrefix: b.networkPrefix}
-}
-
-func (b *BridgeConfig) makeTemplates(_ *Config) (err error) {
-	if b.name == "" {
-		return errors.New("missing bridge interface name")
-	}
-	if err = b.parsePrefix(); err != nil {
-		return err
-	}
-	if err = b.parseBridgeNo(); err != nil {
-		return err
+func (bc *BridgeConfigs) Generate(_ *Config) (errs []error) {
+	for name, bridge := range *bc {
+		bridge.Name = name
+		if err := bridge.parsePrefix(); err != nil {
+			errs = append(errs, err)
+		}
 	}
 
-	// Exit early if rc template has already been written
-	rcPath := path.Join(jtmp.AutoTemplateDir, jtmp.BridgeRC)
-	if _, err = os.Stat(rcPath); err == nil {
-		return nil // template file exists
-	}
+	errs = append(errs, jtmp.ExecTemplates(bc, jtmp.BridgeRC)...)
 
-	var (
-		rcFile *bufio.Writer
-	)
-
-	if file, err := os.Create(path.Join(jtmp.AutoTemplateDir, jtmp.BridgeRC)); err != nil {
-		return err
-	} else {
-		defer file.Close()
-		rcFile = bufio.NewWriter(file)
-		defer rcFile.Flush()
-	}
-
-	rcFile.WriteString("# Bridge {{.Name}} ({{.Description}}) config\n")
-	vtnet := "vtnet{{.BridgeNo}}"
-	jtmp.WriteRc(rcFile, "ifconfig_{{.Name}}", fmt.Sprintf("inet {{.NetworkPrefix}} addm %s", vtnet))
-	jtmp.WriteRc(rcFile, fmt.Sprintf("ifconfig_%s", vtnet), "up")
-
-	return nil
-}
-
-func (b *BridgeConfig) execTemplates(c *Config) {
-	jtmp.ExecAppend(b.context(), jtmp.BridgeRC)
-}
-
-func (b *BridgeConfig) parseBridgeNo() (err error) {
-	regex, err := regexp.Compile("([A-Za-z]+)(\\d+)")
-	if err != nil {
-		return err
-	}
-	if matches := regex.FindStringSubmatch(b.name); len(matches) >= 3 {
-		b.bridgeNo, err = strconv.Atoi(matches[2])
-	}
-	return err
+	return errs
 }
 
 func (b *BridgeConfig) parsePrefix() (err error) {
 	if b.Network != "" {
-		b.networkPrefix, err = netip.ParsePrefix(b.Network)
+		b.NetworkPrefix, err = netip.ParsePrefix(b.Network)
 		return err
 	}
 
@@ -131,7 +52,7 @@ func (b *BridgeConfig) parsePrefix() (err error) {
 		}
 		// Try parsing netmask shorthand
 		if netmask, err := strconv.ParseUint(b.Netmask, 10, 32); err == nil {
-			b.networkPrefix, err = ip.Prefix(int(netmask))
+			b.NetworkPrefix, err = ip.Prefix(int(netmask))
 			return err
 		}
 		// Try parsing netmask address form (only supported for ipv4 at the moment)
@@ -142,11 +63,11 @@ func (b *BridgeConfig) parsePrefix() (err error) {
 			copy(a8[4:], a4[:])
 			// Count 1s to get prefix len, then apply to bridge ip
 			prefixLen := bits.OnesCount64(binary.LittleEndian.Uint64(a8))
-			b.networkPrefix, err = ip.Prefix(prefixLen)
+			b.NetworkPrefix, err = ip.Prefix(prefixLen)
 			return err
 		}
 
-		return fmt.Errorf("failed to parse netmask for bridge %s", b.name)
+		return fmt.Errorf("failed to parse netmask for bridge %s", b.Name)
 	}
 
 	return errors.New("missing both network and ip/netmask keys")
