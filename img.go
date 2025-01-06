@@ -3,8 +3,6 @@ package main
 import (
 	"net/url"
 	"path"
-
-	"github.com/very-amused/jmake/jtmp"
 )
 
 type ImgConfig struct {
@@ -56,6 +54,6 @@ func (img *ImgConfig) Generate(c *Config) (errs []error) {
 		img.Mirror = "https://download.freebsd.org/ftp/"
 	}
 
-	errs = append(errs, jtmp.ExecTemplates(img, jtmp.ImgInit, jtmp.ImgRemove)...)
+	errs = append(errs, ExecTemplates(img, ImgInit, ImgRemove)...)
 	return errs
 }

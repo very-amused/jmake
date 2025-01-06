@@ -1,4 +1,4 @@
-package jtmp
+package main
 
 import (
 	"embed"
@@ -15,7 +15,7 @@ func GetTemplate(name string) (tmp *template.Template, err error) {
 	return template.ParseFS(templates, path.Join("templates", name))
 }
 
-// Get and execute a template using the provided data, writing to jtmp.Output(name)
+// Get and execute a template using the provided data, writing to Output(name)
 func ExecTemplates(data any, names ...string) (errs []error) {
 	for _, name := range names {
 		// Create output file

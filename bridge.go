@@ -7,8 +7,6 @@ import (
 	"math/bits"
 	"net/netip"
 	"strconv"
-
-	"github.com/very-amused/jmake/jtmp"
 )
 
 type BridgeConfig struct {
@@ -34,7 +32,7 @@ func (bc *BridgeConfigs) Generate(_ *Config) (errs []error) {
 		}
 	}
 
-	errs = append(errs, jtmp.ExecTemplates(bc, jtmp.BridgeRC)...)
+	errs = append(errs, ExecTemplates(bc, BridgeRC)...)
 
 	return errs
 }

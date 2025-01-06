@@ -3,7 +3,7 @@
 zfs create {{.Dataset}} # Create image dataset
 fetch {{.TarURL}} -o {{.Tar}} # Download base tarball
 {{.CheckResult}}
-tar -xf {{.Tar}} -C {{.Path}}  --unlink # Extract base tarball to dataset
+tar -xf {{.Tar}} -C {{.Path}} --unlink # Extract base tarball to dataset
 
 # Copy host DNS and timezone to image
 cp /etc/resolv.conf {{.Path}}/etc/resolv.conf

@@ -24,6 +24,7 @@ func logErrs(newErrs, errs []error) []error {
 	return append(errs, newErrs...)
 }
 
+// ConfigSection - A config section capable of generating output files
 type ConfigSection interface {
 	Generate(*Config) []error
 }

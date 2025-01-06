@@ -1,9 +1,5 @@
 package main
 
-import (
-	"github.com/very-amused/jmake/jtmp"
-)
-
 // ZFS dataset configuration for creating thin jail images/containers.
 type ZFSconfig struct {
 	Dataset    string // Jail root dataset
@@ -18,8 +14,8 @@ func (z *ZFSconfig) Generate(_ *Config) (errs []error) {
 	}
 
 	if z.Mountpoint != "" {
-		errs = append(errs, jtmp.ExecTemplates(z, jtmp.ZFSinit)...)
+		errs = append(errs, ExecTemplates(z, ZFSinit)...)
 	}
-	errs = append(errs, jtmp.ExecTemplates(z, jtmp.ZFSstatus, jtmp.ZFSdestroy)...)
+	errs = append(errs, ExecTemplates(z, ZFSstatus, ZFSdestroy)...)
 	return errs
 }

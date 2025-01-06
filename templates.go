@@ -1,4 +1,4 @@
-package jtmp
+package main
 
 import (
 	"path"
