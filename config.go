@@ -10,7 +10,7 @@ import (
 type Config struct {
 	ZFS    *ZFSconfig
 	Img    *ImgConfig
-	Bridge BridgeConfigs
+	Bridge *BridgeConfigs
 	Jail   map[string]*JailConfig
 
 	ContextChecks
@@ -24,17 +24,20 @@ func logErrs(newErrs, errs []error) []error {
 	return append(errs, newErrs...)
 }
 
+type ConfigSection interface {
+	Generate(*Config) []error
+}
+
 // Generate - Generate output files using jmake.toml
 func (c *Config) Generate() {
+	// Generate output for all config sections supporting .Generate(c)
 	var errs []error
-	if c.ZFS != nil {
-		errs = logErrs(c.ZFS.Generate(c), errs)
-	}
-	if c.Img != nil {
-		errs = logErrs(c.Img.Generate(c), errs)
-	}
-	if c.Bridge != nil {
-		errs = logErrs(c.Bridge.Generate(c), errs)
+	configSections := []ConfigSection{c.ZFS, c.Img, c.Bridge}
+	for _, section := range configSections {
+		if section == nil {
+			continue
+		}
+		errs = logErrs(section.Generate(c), errs)
 	}
 
 	if len(errs) > 0 {
