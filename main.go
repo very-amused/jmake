@@ -23,6 +23,6 @@ func main() {
 		log.Fatalln("Failed to parse jmake.toml:", err)
 	}
 
-	// Execute templates
-	jmake.ExecTemplates()
+	// Generate output files
+	jmake.Generate()
 }

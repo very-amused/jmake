@@ -16,26 +16,33 @@ type Config struct {
 	ContextChecks
 }
 
-// A config section capable of template gen
-type ConfigSection interface {
-	makeTemplates(c *Config) error
-	execTemplates(c *Config)
+// Log newErrs and return append(errs, newErrs...)
+func logErrs(newErrs, errs []error) []error {
+	for _, err := range newErrs {
+		log.Println(err)
+	}
+	return append(errs, newErrs...)
 }
 
-// ExecTemplates - Execute config templates previous generated using MakeTemplates
-func (c *Config) ExecTemplates() {
+// Generate - Generate output files using jmake.toml
+func (c *Config) Generate() {
+	var errs []error
 	if c.ZFS != nil {
-		c.ZFS.Generate(c)
+		errs = logErrs(c.ZFS.Generate(c), errs)
 	}
 	if c.Img != nil {
-		if errs := c.Img.Generate(c); len(errs) > 0 {
-			for _, err := range errs {
-				log.Println(err)
-			}
-		}
+		errs = logErrs(c.Img.Generate(c), errs)
 	}
 	if c.Bridge != nil {
-		c.Bridge.Generate(c)
+		errs = logErrs(c.Bridge.Generate(c), errs)
+	}
+
+	if len(errs) > 0 {
+		errNoun := "errors"
+		if len(errs) == 1 {
+			errNoun = "error"
+		}
+		log.Printf("jmake encountered %d %s while generating output files\n", len(errs), errNoun)
 	}
 }
 
