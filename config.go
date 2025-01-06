@@ -13,6 +13,8 @@ type Config struct {
 	Bridge *BridgeConfigs
 	Jail   map[string]*JailConfig
 
+	Host *HostConfig
+
 	ContextChecks
 }
 

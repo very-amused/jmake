@@ -15,6 +15,8 @@ const (
 	ImgRemove = "img-remove.sh.template"
 
 	BridgeRC = "bridge.rc.conf.template"
+
+	JailConf = "jail.conf.template"
 )
 
 // Get a template's output filename
