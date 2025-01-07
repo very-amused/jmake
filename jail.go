@@ -27,6 +27,7 @@ type JailConfig struct {
 	ContextChecks
 
 	zfs *ZFSconfig // ZFS config used for computing jail root path/dataset
+	img *ImgConfig // Image config used for generating deploy/remove scripts
 }
 
 // Parsed jail IP address
@@ -44,6 +45,13 @@ func (j *JailConfig) Path() string {
 // Name of jail ZFS dataset
 func (j *JailConfig) Dataset() string {
 	return path.Join(j.zfs.Dataset, "containers", j.Name)
+}
+
+func (j *JailConfig) ZFS() *ZFSconfig {
+	return j.zfs
+}
+func (j *JailConfig) Img() *ImgConfig {
+	return j.img
 }
 
 type JailConfigs map[string]*JailConfig
@@ -81,9 +89,13 @@ func (jc *JailConfigs) Generate(c *Config) (errs []error) {
 
 		// Attach ZFS config
 		jail.zfs = c.ZFS
+		if c.Img != nil { // Attach img config if present. TODO: validate img config before generating deploy scripts
+			jail.img = c.Img
+		}
 	}
 
 	errs = append(errs, ExecTemplates(jails, JailConf)...)
+	errs = append(errs, ExecTemplates(jails[0], JailDeploy)...) // FIXME: for testing
 
 	return errs
 }

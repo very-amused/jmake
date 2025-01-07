@@ -1,0 +1,4 @@
+{{.NeedsRoot}}
+# Deploy jail {{.Name}} from image{{.Img.Release}}@{{.Img.Snapshot}}
+zfs clone {{.Img.Dataset}}@{{.Img.Snapshot}} {{.Dataset}} # Clone template data
+zfs snapshot {{.Dataset}}@{{.Img.Snapshot}} # Snapshot initial deployment state

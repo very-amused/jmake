@@ -16,7 +16,8 @@ const (
 
 	BridgeRC = "bridge.rc.conf.template"
 
-	JailConf = "jail.conf.template"
+	JailConf   = "jail.conf.template"
+	JailDeploy = "jail-deploy.sh.template"
 )
 
 // Get a template's output filename
