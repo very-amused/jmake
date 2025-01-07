@@ -53,7 +53,8 @@ func (jc *JailConfigs) Generate(c *Config) (errs []error) {
 
 	jid := 1
 	epairNo := 0
-	for name, jail := range *jc {
+	for _, name := range c.Keys.Jail {
+		jail := (*jc)[name]
 		// Assign name + jid
 		jail.Name = name
 		jail.JID = jid
@@ -62,8 +63,9 @@ func (jc *JailConfigs) Generate(c *Config) (errs []error) {
 		if jail.Hostname == "" {
 			if c.Host == nil || c.Host.Domain == "" {
 				errs = append(errs, fmt.Errorf("jail.%s: cannot generate jail hostname, missing [host.domain].", name))
+			} else {
+				jail.Hostname = jail.Name + "." + c.Host.Domain
 			}
-			jail.Hostname = jail.Name + "." + c.Host.Domain
 		}
 
 		// Validate IP addresses
