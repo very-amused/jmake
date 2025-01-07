@@ -1,7 +1,7 @@
-#  Jail configuration file [this file was generated using jmake, feel free to modify it :)]
+#  jail.conf [this file was generated using jmake, feel free to modify it :)]
 #  Place this file in /etc/
 
-# Permissions (TODO: make these configurable)
+# Default jail settings (TODO: make these configurable)
 allow.raw_sockets;
 exec.clean;
 mount.devfs;

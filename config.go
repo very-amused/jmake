@@ -15,12 +15,12 @@ type Config struct {
 	Img    *ImgConfig
 	Bridge *BridgeConfigs
 	Jail   *JailConfigs
+	Host   *HostConfig
 
-	Host *HostConfig
+	bridgeKeys []string
+	jailKeys   []string // ordered jail config keys, not what's on the warden's belt
 
 	ContextChecks
-
-	Keys *ConfigKeys `toml:"-"`
 }
 
 // Ordered jmake.toml keys (needed b/c Go maps are unordered)
@@ -78,51 +78,68 @@ func ParseConfig() (c *Config, e error) {
 }
 
 // Parse jmake.toml key order
-func ParseConfigKeys() (k *ConfigKeys, e error) {
-	k = new(ConfigKeys)
+func (c *Config) ParseKeyOrder() (e error) {
 	file, e := os.Open("jmake.toml")
 	if e != nil {
-		return k, e
+		return e
 	}
 	defer file.Close()
 
 	parser := tomlu.Parser{}
 	content, e := io.ReadAll(file)
 	if e != nil {
-		return k, e
+		return e
 	}
 	parser.Reset(content)
 
+	var table []string
 	for parser.NextExpression() {
 		exp := parser.Expression()
 
-		if exp.Kind != tomlu.Table {
+		var keyParts []string // Dot separated list of key parts
+		switch exp.Kind {
+		case tomlu.Table:
+			table = splitTomlKey(exp.Key())
+			keyParts = table
+		case tomlu.KeyValue:
+			parts := splitTomlKey(exp.Key())
+			keyParts = append(table, parts...)
+		default:
 			continue
 		}
 
-		key := exp.Key()
-		keyParts := keyAsStrings(key)
-		if len(keyParts) != 2 {
+		if len(keyParts) == 4 {
+			switch keyParts[0] {
+			case "jail":
+				jail := keyParts[1]
+				ip := keyParts[3]
+				if c.Jail == nil || (*c.Jail)[jail] == nil {
+					break
+				}
+				ipKeys := &(*c.Jail)[jail].ipKeys
+				*ipKeys = append(*ipKeys, ip)
+			}
 			continue
 		}
-		switch keyParts[0] {
-		case "bridge":
-			k.Bridge = append(k.Bridge, keyParts[1])
-		case "jail":
-			k.Jail = append(k.Jail, keyParts[1])
+		if len(keyParts) == 2 {
+			switch keyParts[0] {
+			case "bridge":
+				c.bridgeKeys = append(c.bridgeKeys, keyParts[1])
+			case "jail":
+				c.jailKeys = append(c.jailKeys, keyParts[1])
+			}
 		}
 	}
 
-	return k, e
+	return nil
 }
 
-// helper to transfor a key iterator to a slice of strings
-// credit: pelletier [https://github.com/pelletier/go-toml/discussions/801#discussioncomment-7083586]
-func keyAsStrings(it tomlu.Iterator) []string {
-	var parts []string
+// Split a toml key iterator into a list of keys
+// i.e my.key.here -> {"my", "key", "here"}
+func splitTomlKey(it tomlu.Iterator) (keys []string) {
 	for it.Next() {
-		n := it.Node()
-		parts = append(parts, string(n.Data))
+		node := it.Node()
+		keys = append(keys, string(node.Data))
 	}
-	return parts
+	return keys
 }

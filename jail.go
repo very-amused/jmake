@@ -22,6 +22,8 @@ type JailConfig struct {
 	// Parsed jail IP addresses
 	IPs []JailIP `toml:"-"`
 
+	ipKeys []string // Ordered IP map keys
+
 	ContextChecks
 
 	zfs *ZFSconfig // ZFS config used for computing jail root path/dataset
@@ -51,10 +53,14 @@ func (jc *JailConfigs) Generate(c *Config) (errs []error) {
 		return errs
 	}
 
+	// Ordered jail configs
+	jails := make([]*JailConfig, 0, len(*jc))
+
 	jid := 1
 	epairNo := 0
-	for _, name := range c.Keys.Jail {
+	for _, name := range c.jailKeys {
 		jail := (*jc)[name]
+		jails = append(jails, jail)
 		// Assign name + jid
 		jail.Name = name
 		jail.JID = jid
@@ -77,7 +83,7 @@ func (jc *JailConfigs) Generate(c *Config) (errs []error) {
 		jail.zfs = c.ZFS
 	}
 
-	errs = append(errs, ExecTemplates(jc, JailConf)...)
+	errs = append(errs, ExecTemplates(jails, JailConf)...)
 
 	return errs
 }
@@ -89,7 +95,8 @@ func (j *JailConfig) parseIPs(bridges *BridgeConfigs, epairNo *int) (err error) 
 		bridges = new(BridgeConfigs)
 	}
 
-	for bridgeName, ip := range j.IP {
+	for _, bridgeName := range j.ipKeys {
+		ip := j.IP[bridgeName]
 		configStr := fmt.Sprintf("%s.ip.%s = %s", j.Name, bridgeName, ip)
 		// Ignore and warn about IPs that don't attach to a defined bridge
 		bridge, ok := (*bridges)[bridgeName]

@@ -24,15 +24,18 @@ type BridgeConfig struct {
 
 type BridgeConfigs map[string]*BridgeConfig
 
-func (bc *BridgeConfigs) Generate(_ *Config) (errs []error) {
-	for name, bridge := range *bc {
+func (bc *BridgeConfigs) Generate(c *Config) (errs []error) {
+	bridges := make([]*BridgeConfig, 0, len(*bc))
+	for _, name := range c.bridgeKeys {
+		bridge := (*bc)[name]
+		bridges = append(bridges, bridge)
 		bridge.Name = name
 		if err := bridge.parsePrefix(); err != nil {
 			errs = append(errs, err)
 		}
 	}
 
-	errs = append(errs, ExecTemplates(bc, BridgeRC)...)
+	errs = append(errs, ExecTemplates(bridges, BridgeRC)...)
 
 	return errs
 }

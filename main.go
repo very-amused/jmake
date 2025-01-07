@@ -14,7 +14,7 @@ func main() {
 	if err != nil {
 		log.Fatalln("Failed to parse jmake.toml:", err)
 	}
-	jmake.Keys, err = ParseConfigKeys()
+	err = jmake.ParseKeyOrder()
 	if err != nil {
 		log.Fatalln("Failed to parse key order from jmake.toml:", err)
 	}
