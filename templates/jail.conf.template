@@ -7,7 +7,6 @@ exec.clean;
 mount.devfs;
 vnet; # Enable vnet networking
 devfs_ruleset=5; # vnet ruleset
-
 {{range .}}
 # Jail {{.Name}} config
 {{.Name}} {
