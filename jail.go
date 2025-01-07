@@ -95,7 +95,7 @@ func (jc *JailConfigs) Generate(c *Config) (errs []error) {
 	}
 
 	errs = append(errs, ExecTemplates(jails, JailConf)...)
-	errs = append(errs, ExecTemplates(jails[0], JailDeploy)...) // FIXME: for testing
+	errs = append(errs, ExecMultiTemplates(jails, c.jailKeys, JailDeploy)...)
 
 	return errs
 }

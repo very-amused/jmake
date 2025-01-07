@@ -13,16 +13,18 @@ devfs_ruleset=5; # vnet ruleset
 	jid = {{.JID}};
 	path = "{{.Path}}";
 	host.hostname = "{{.Hostname}}";
-{{range .IPs}}
+{{if .IPs}}
+	# SECURITY NOTE: VNET jail traffic bypasses the host's network stack,
+	# which *includes* host firewall filtering.
+	# ***VNET interfaces can only be filtered/firewalled on the jail they service, NOT on the host system.***
+{{end}}
+{{range $i, $_ := .IPs}}
 	# IP {{.Addr}} on {{.Bridge}}
 	exec.prestart += "ifconfig epair{{.EpairNo}} create up"; # Create epair
 	exec.prestart += "ifconfig {{.Bridge}} addm epair{{.EpairNo}}a"; # Connect end A to host bridge
-	# SECURITY NOTE: Making the following 'connection' removes *all* host control of end B (the exit interface for traffic to/from the jail),
-	# which *includes* host firewall filtering*.
-	# ***VNET interfaces can only be filtered/firewalled on the jail they service, NOT on the host system.***
-	vnet.interface = "epair{{.EpairNo}}b"; # Connect end B to jail (see above note)
+	vnet.interface += "epair{{.EpairNo}}b"; # Connect end B to jail
 	exec.start += "/sbin/ifconfig epair{{.EpairNo}}b inet {{.Addr}}"; # Configure end B
-	exec.start += "/sbin/ifconfig epair{{.EpairNo}}b name epair0b"; # Rename to epair0b in jail for easier firewalling
+	exec.start += "/sbin/ifconfig epair{{.EpairNo}}b name epair{{$i}}b"; # Rename to epair{{$i}}b in jail for easier firewalling
 	exec.poststop += "ifconfig {{.Bridge}} deletem epair{{.EpairNo}}a"; # Disconnect end A from host bridge
 	exec.poststop += "ifconfig epair{{.EpairNo}}a destroy"; # Destroy end A, effectively destroying the epair itself
 {{end}}

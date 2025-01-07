@@ -4,6 +4,7 @@ import (
 	"embed"
 	"os"
 	"path"
+	"strings"
 	"text/template"
 )
 
@@ -40,6 +41,51 @@ func ExecTemplates(data any, names ...string) (errs []error) {
 		}
 
 		file.Close()
+	}
+
+	return errs
+}
+
+// Get and execute templates using the provided slices for data and suffix labels
+func ExecMultiTemplates[D any](data []D, labels []string, names ...string) (errs []error) {
+	if len(data) != len(labels) {
+		return errs
+	}
+
+	for _, name := range names {
+		// Load template
+		tmp, err := GetTemplate(name)
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+
+		for i, label := range labels {
+
+			// Add label to output filename
+			var output strings.Builder
+			nameParts := strings.Split(Output(name), ".")
+			output.WriteString(nameParts[0])
+			output.WriteRune('-')
+			output.WriteString(label)
+			output.WriteRune('.')
+			output.WriteString(strings.Join(nameParts[1:], "."))
+
+			// Open output file
+			file, err := os.Create(output.String())
+			if err != nil {
+				errs = append(errs, err)
+			}
+			defer file.Close()
+
+			// Execute template
+			err = tmp.Execute(file, data[i])
+			if err != nil {
+				errs = append(errs, err)
+				continue
+			}
+			file.Close()
+		}
 	}
 
 	return errs

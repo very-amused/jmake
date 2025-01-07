@@ -78,7 +78,7 @@ func ParseConfig() (c *Config, e error) {
 }
 
 // Parse jmake.toml key order
-func (c *Config) ParseKeyOrder() (e error) {
+func (c *Config) parseKeyOrder() (e error) {
 	file, e := os.Open("jmake.toml")
 	if e != nil {
 		return e

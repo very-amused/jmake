@@ -1,4 +1,8 @@
 {{.NeedsRoot}}
 # Deploy jail {{.Name}} from image{{.Img.Release}}@{{.Img.Snapshot}}
 zfs clone {{.Img.Dataset}}@{{.Img.Snapshot}} {{.Dataset}} # Clone template data
+{{.CheckResult}}
 zfs snapshot {{.Dataset}}@{{.Img.Snapshot}} # Snapshot initial deployment state
+
+# Start the jail
+jail -cmr name={{.Name}}
