@@ -48,9 +48,9 @@ func (c *Config) Generate() {
 	var errs []error
 	configSections := []ConfigSection{c.ZFS, c.Img, c.Bridge, c.Jail}
 	for _, section := range configSections {
-		if section == nil {
-			continue
-		}
+		// NOTE: We can't check if sections are nil here,
+		// they need to check themselves at the top of the .Generate() method.
+		// See https://groups.google.com/g/golang-nuts/c/wnH302gBa4I for details
 		errs = logErrs(section.Generate(c), errs)
 	}
 

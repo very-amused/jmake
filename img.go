@@ -38,6 +38,9 @@ func (img *ImgConfig) Dataset() string {
 }
 
 func (img *ImgConfig) Generate(c *Config) (errs []error) {
+	if img == nil {
+		return nil
+	}
 	if img.Release == "" {
 		return nil
 	}

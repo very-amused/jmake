@@ -9,6 +9,9 @@ type ZFSconfig struct {
 }
 
 func (z *ZFSconfig) Generate(_ *Config) (errs []error) {
+	if z == nil {
+		return nil
+	}
 	if z.Dataset == "" {
 		return nil
 	}

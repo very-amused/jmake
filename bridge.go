@@ -25,6 +25,10 @@ type BridgeConfig struct {
 type BridgeConfigs map[string]*BridgeConfig
 
 func (bc *BridgeConfigs) Generate(c *Config) (errs []error) {
+	if bc == nil {
+		return nil
+	}
+
 	bridges := make([]*BridgeConfig, 0, len(*bc))
 	for _, name := range c.bridgeKeys {
 		bridge := (*bc)[name]

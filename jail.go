@@ -57,6 +57,9 @@ func (j *JailConfig) Img() *ImgConfig {
 type JailConfigs map[string]*JailConfig
 
 func (jc *JailConfigs) Generate(c *Config) (errs []error) {
+	if jc == nil {
+		return nil
+	}
 	if c.ZFS == nil {
 		return errs
 	}
