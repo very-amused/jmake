@@ -9,7 +9,7 @@ type ImgConfig struct {
 	Release  string // FreeBSD release string (e.g 14.2-RELEASE) to deploy from
 	Snapshot string // A snapshot name to deploy from. Set to `base` if no image customization is desired
 	Arch     string // FreeBSD architecture string (default: "amd64/amd64")
-	Mirror   string // FreeBSD download mirror (default: https://download.freebsd.org/ftp/)
+	Mirror   string // FreeBSD download mirror (default: https://download.freebsd.org/ftp/releases/)
 
 	ContextChecks
 
@@ -54,7 +54,7 @@ func (img *ImgConfig) Generate(c *Config) (errs []error) {
 		img.Arch = "amd64/amd64"
 	}
 	if img.Mirror == "" {
-		img.Mirror = "https://download.freebsd.org/ftp/"
+		img.Mirror = "https://download.freebsd.org/ftp/releases/"
 	}
 
 	errs = append(errs, ExecTemplates(img, ImgInit, ImgRemove)...)
