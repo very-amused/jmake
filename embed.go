@@ -19,8 +19,16 @@ func GetTemplate(name string) (tmp *template.Template, err error) {
 // Get and execute a template using the provided data, writing to Output(name)
 func ExecTemplates(data any, names ...string) (errs []error) {
 	for _, name := range names {
+		// Calculate output file perms
+		var perm os.FileMode = 0o644
+		filename := Output(name)
+		if path.Ext(filename) == ".sh" {
+			perm += 0o111 // Add +x to executable files
+		}
+		defer os.Chmod(filename, perm) // Set file perms after writing (needed to create executable files)
+
 		// Create output file
-		file, err := os.Create(Output(name))
+		file, err := os.OpenFile(Output(name), os.O_RDWR|os.O_CREATE|os.O_TRUNC, perm)
 		if err != nil {
 			errs = append(errs, err)
 			continue
