@@ -11,7 +11,7 @@ type ImgConfig struct {
 	Arch     string // FreeBSD architecture string (default: "amd64/amd64")
 	Mirror   string // FreeBSD download mirror (default: https://download.freebsd.org/ftp/releases/)
 
-	Bootstrap *BootstrapConfig
+	Bootstrap *BootstrapConfig // Optional image bootstrap options
 
 	ContextChecks
 
@@ -60,5 +60,8 @@ func (img *ImgConfig) Generate(c *Config) (errs []error) {
 	}
 
 	errs = append(errs, ExecTemplates(img, ImgInit, ImgStatus, ImgRemove)...)
+	if img.Bootstrap != nil {
+		errs = append(errs, ExecTemplates(img, ImgBootstrap)...)
+	}
 	return errs
 }

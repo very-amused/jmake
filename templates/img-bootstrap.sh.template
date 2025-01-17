@@ -1,0 +1,15 @@
+{{.NeedsRoot}}
+# Bootstrap (customize) an already initialized FreeBSD {{.Release}} image for jail deployment
+mount -t devfs none {{.Path}}/dev # Mount jail devfs (needed for chroot commands to work)
+{{.CheckResult}}
+devfs -m {{.Path}}/dev rule -s 4 applyset # Apply devfs ruleset 4 to jail devfs
+{{.CheckResult}}
+
+chroot {{.Path}} pkg bootstrap # Bootstrap the pkg binary package manager
+{{if .Bootstrap.Packages}}
+chroot {{.Path}} pkg install {{range .Bootstrap.Packages}}{{.}} {{end}} # Install packages
+{{end}}
+# TODO: create and lock user accounts using pw
+
+# Unmount jail devfs
+umount {{.Path}}/dev
