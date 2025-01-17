@@ -12,6 +12,7 @@ chroot {{.Path}} pkg install {{range .Bootstrap.Packages}}{{.}} {{end}} # Instal
 
 {{$path := .Path}}
 {{if .Bootstrap.User}}
+# FIXME: I don't know why pw can't locate the shell on its own here (-s line)
 {{range .Bootstrap.User}}
 # Create user {{.Username}}
 chroot {{$path}} pw useradd \
