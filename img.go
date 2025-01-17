@@ -11,6 +11,8 @@ type ImgConfig struct {
 	Arch     string // FreeBSD architecture string (default: "amd64/amd64")
 	Mirror   string // FreeBSD download mirror (default: https://download.freebsd.org/ftp/releases/)
 
+	Bootstrap *BootstrapConfig
+
 	ContextChecks
 
 	zfs *ZFSconfig // ptr to ZFS config
