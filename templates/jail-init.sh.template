@@ -1,0 +1,5 @@
+{{.NeedsRoot}}
+# Initialize jail {{.Name}} from image {{.Img.Release}}@{{.Img.Snapshot}}
+zfs clone {{.Img.Dataset}}@{{.Img.Snapshot}} {{.Dataset}} # Clone from template dataset
+zfs snapshot {{.Dataset}}@vanilla # Snapshot "vanilla" state of the jail (relative to its parent image snapshot)
+

@@ -24,8 +24,7 @@ type JailConfig struct {
 
 	ipKeys []string // Ordered IP map keys
 
-	// Packages to be installed on the jail at bootstrap time
-	Packages []string
+	Bootstrap *BootstrapConfig // Jail bootstrap config
 
 	ContextChecks
 
@@ -75,11 +74,18 @@ func (jc *JailConfigs) Generate(c *Config) (errs []error) {
 	for _, name := range c.jailKeys {
 		jail := (*jc)[name]
 		jails = append(jails, jail)
+
+		// Attach ZFS config
+		jail.zfs = c.ZFS
+		if c.Img != nil { // Attach img config if present. TODO: validate img config before generating script
+			jail.img = c.Img
+		}
+
 		// Assign name + jid
 		jail.Name = name
 		jail.JID = jid
 		jid++
-		// Generat hostname from host domain if needed
+		// Generate hostname from host domain if needed
 		if jail.Hostname == "" {
 			if c.Host == nil || c.Host.Domain == "" {
 				errs = append(errs, fmt.Errorf("jail.%s: cannot generate jail hostname, missing [host.domain].", name))
@@ -92,16 +98,17 @@ func (jc *JailConfigs) Generate(c *Config) (errs []error) {
 		if err := jail.parseIPs(c.Bridge, &epairNo); err != nil {
 			errs = append(errs, err)
 		}
-
-		// Attach ZFS config
-		jail.zfs = c.ZFS
-		if c.Img != nil { // Attach img config if present. TODO: validate img config before generating deploy scripts
-			jail.img = c.Img
+		// Prepare bootstrap config if needed
+		if jail.Bootstrap != nil && jail.Bootstrap.User != nil {
+			for username, user := range *jail.Bootstrap.User {
+				user.Username = username
+				user.setDefaults()
+			}
 		}
 	}
 
 	errs = append(errs, ExecTemplates(jails, JailConf)...)
-	errs = append(errs, ExecMultiTemplates(jails, c.jailKeys, JailDeploy)...)
+	errs = append(errs, ExecMultiTemplates(jails, c.jailKeys, JailInit, JailBootstrap)...)
 
 	return errs
 }

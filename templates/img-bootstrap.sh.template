@@ -1,10 +1,11 @@
 {{.NeedsRoot}}
+# Bootstrap (customize) an already initialized FreeBSD {{.Release}} image for jail deployment
 # Start bootstrap from vanilla snapshot (fails if jails depend on a snapshot newer than vanilla)
 zfs rollback -r {{.Dataset}}@vanilla
-# Bootstrap (customize) an already initialized FreeBSD {{.Release}} image for jail deployment
-mount -t devfs none {{.Path}}/dev # Mount jail devfs (needed for chroot commands to work)
 {{.CheckResult}}
-devfs -m {{.Path}}/dev rule -s 4 applyset # Apply devfs ruleset 4 to jail devfs
+mount -t devfs none {{.Path}}/dev # Mount chroot devfs (needed for chroot commands to work)
+{{.CheckResult}}
+devfs -m {{.Path}}/dev rule -s 4 applyset # Apply devfs ruleset 4 to chroot devfs
 {{.CheckResult}}
 
 chroot {{.Path}} pkg bootstrap # Bootstrap the pkg binary package manager
@@ -39,7 +40,7 @@ chroot {{$path}} chown -R {{$username}}:{{$username}} {{$homedir}}/{{.}}
 {{end}}
 {{end}}
 
-# Unmount jail devfs
+# Unmount chroot devfs
 umount {{.Path}}/dev
 
 # Snapshot bootstrapped image
