@@ -61,6 +61,12 @@ func (img *ImgConfig) Generate(c *Config) (errs []error) {
 
 	errs = append(errs, ExecTemplates(img, ImgInit, ImgStatus, ImgRemove)...)
 	if img.Bootstrap != nil {
+		if img.Bootstrap.User != nil {
+			for username, user := range *img.Bootstrap.User {
+				user.Username = username
+				user.setDefaults()
+			}
+		}
 		errs = append(errs, ExecTemplates(img, ImgBootstrap)...)
 	}
 	return errs

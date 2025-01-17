@@ -9,7 +9,24 @@ chroot {{.Path}} pkg bootstrap # Bootstrap the pkg binary package manager
 {{if .Bootstrap.Packages}}
 chroot {{.Path}} pkg install {{range .Bootstrap.Packages}}{{.}} {{end}} # Install packages
 {{end}}
-# TODO: create and lock user accounts using pw
+
+{{$path := .Path}}
+{{if .Bootstrap.User}}
+{{range .Bootstrap.User}}
+# Create user {{.Username}}
+chroot {{$path}} pw useradd \
+	-n {{.Username}} \
+	{{if .Uid}}-u {{.Uid}}{{end}} \
+	{{if .LoginGroup}}-g {{.LoginGroup}}{{end}} \
+	{{if .Groups}}-G {{range .Groups}}{{.}},{{end}}{{end}} \
+	{{if .LoginClass}}-L {{.LoginClass}}{{end}} \
+	{{if .Shell}}-s `which {{.Shell}}`{{end}} \
+	{{if .CreateHome}}-m{{end}} \
+	{{if and .CreateHome .HomeDir}}-d {{.HomeDir}}{{end}} \
+	{{if and .CreateHome .HomePerms}}-M {{.HomePermString}}{{end}} \
+	-w no # Lock account
+{{end}}
+{{end}}
 
 # Unmount jail devfs
 umount {{.Path}}/dev
