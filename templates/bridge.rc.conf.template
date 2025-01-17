@@ -1,7 +1,10 @@
 # Host bridge configuration for vnet jails.
-# Place this file in /usr/local/etc/rc.d
+# Append the contents of this file to /etc/rc.conf
 cloned_interfaces="{{range .}}{{.Name}} {{end}}"
 {{range .}}
 # Bridge {{.Name}} ({{.Description}}) config
 ifconfig_{{.Name}}="inet {{.NetworkPrefix}}{{range .Interfaces}} addm {{.}} {{end}}"
+{{range .Interfaces}}
+ifconfig_{{.}}="up" # Bring {{.}} up to receive bridge traffic
+{{end}}
 {{end}}

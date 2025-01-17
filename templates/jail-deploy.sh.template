@@ -1,8 +1,11 @@
 {{.NeedsRoot}}
-# Deploy jail {{.Name}} from image{{.Img.Release}}@{{.Img.Snapshot}}
+# Deploy and bootstrap jail {{.Name}} from image{{.Img.Release}}@{{.Img.Snapshot}}
 zfs clone {{.Img.Dataset}}@{{.Img.Snapshot}} {{.Dataset}} # Clone template data
 {{.CheckResult}}
-zfs snapshot {{.Dataset}}@{{.Img.Snapshot}} # Snapshot initial deployment state
-
+zfs snapshot {{.Dataset}}@{{.Img.Snapshot}} # Snapshot initial deployment state (pre-bootstrap)
+# Bootstrap pkg
+jexec {{.Name}} pkg boostrap
+# Install jail packages
+jexec {{.Name}} pkg install {{range .Packages}}{{.}} {{end}}
 # Start the jail
 jail -cmr name={{.Name}}

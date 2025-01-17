@@ -24,6 +24,9 @@ type JailConfig struct {
 
 	ipKeys []string // Ordered IP map keys
 
+	// Packages to be installed on the jail at bootstrap time
+	Packages []string
+
 	ContextChecks
 
 	zfs *ZFSconfig // ZFS config used for computing jail root path/dataset

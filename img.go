@@ -57,6 +57,6 @@ func (img *ImgConfig) Generate(c *Config) (errs []error) {
 		img.Mirror = "https://download.freebsd.org/ftp/releases/"
 	}
 
-	errs = append(errs, ExecTemplates(img, ImgInit, ImgRemove)...)
+	errs = append(errs, ExecTemplates(img, ImgInit, ImgStatus, ImgRemove)...)
 	return errs
 }

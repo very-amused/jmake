@@ -12,6 +12,7 @@ const (
 	ZFSdestroy = "zfs-destroy.sh.template"
 
 	ImgInit   = "img-init.sh.template"
+	ImgStatus = "img-status.sh.template"
 	ImgRemove = "img-remove.sh.template"
 
 	BridgeRC = "bridge.rc.conf.template"
