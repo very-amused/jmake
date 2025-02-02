@@ -1,6 +1,6 @@
 {{.NeedsRoot}}
-# Bootstrap (customize) an initialized jail
-# Start bootstrap from vanilla snapshot (fails if jail has a snapshot newer than vanilla)
+# Configure an initialized jail system
+# Start from vanilla snapshot (fails if jail has a snapshot newer than vanilla)
 zfs rollback {{.Dataset}}@vanilla
 {{.CheckResult}}
 mount -t devfs none {{.Path}}/dev # Mount jail devfs (needed for chroot commands to work)
@@ -13,8 +13,8 @@ chroot {{.Path}} pkg bootstrap # Bootstrap the pkg binary package manager
 chroot {{.Path}} pkg update # Update pkg repos
 chroot {{.Path}} pkg upgrade # Update binary packages
 
-{{if and .Bootstrap .Bootstrap.Packages}}
-chroot {{.Path}} pkg install {{range .Bootstrap.Packages}}{{.}} {{end}} # Install packages
+{{if and .Configure .Configure.Packages}}
+chroot {{.Path}} pkg install {{range .Configure.Packages}}{{.}} {{end}} # Install packages
 {{end}}
 
 # Lock root account or set root passwd
@@ -30,20 +30,19 @@ fi
 
 {{$path := .Path}}
 {{$jailname := .Name}}
-# Finish bootstrapping users from the image's bootstrap config
-{{if and .Img .Img.Bootstrap .Img.Bootstrap.User}}
-{{range .Img.Bootstrap.User}}
+# Finish configuring users from img-configure
+{{if and .Img .Img.Configure .Img.Configure.User}}
+{{range .Img.Configure.User}}
 echo 'Set password for {{.Username}}@{{$jailname}}:'
 chroot {{$path}} pw unlock {{.Username}}
 chroot {{$path}} passwd {{.Username}}
 {{end}}
 {{end}}
 
-# Bootstrap users in the jail's bootstrap config
-{{if and .Bootstrap .Bootstrap.User}}
-{{range .Bootstrap.User}}
+{{if and .Configure .Configure.User}}
+{{range .Configure.User}}
 # Create user {{.Username}}
-chroot {{$path}} pw useradd -n {{.Username}} \
+chroot {{.Path}} pw useradd -n {{.Username}} \
 	{{if .Uid}}-u {{.Uid}}{{end}} \
 	{{if .LoginGroup}}-g {{.LoginGroup}}{{end}} \
 	{{if .Groups}}-G {{range .Groups}}{{.}},{{end}}{{end}} \
@@ -54,7 +53,7 @@ chroot {{$path}} pw useradd -n {{.Username}} \
 	-M {{.HomePermString}}{{end}} \
 	-w no # Don't set user password. This will be done next with the passwd command
 echo 'Set password for {{.Username}}@{{$jailname}}:'
-chroot {{$path}} passwd {{.Username}}
+chroot {{.Path}} passwd {{.Username}}
 {{end}}
 {{end}}
 

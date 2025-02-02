@@ -24,7 +24,7 @@ type JailConfig struct {
 
 	ipKeys []string // Ordered IP map keys
 
-	Bootstrap *BootstrapConfig // Jail bootstrap config
+	Configure *JailConfiguration // Jail system configure
 
 	ContextChecks
 
@@ -98,9 +98,9 @@ func (jc *JailConfigs) Generate(c *Config) (errs []error) {
 		if err := jail.parseIPs(c.Bridge, &epairNo); err != nil {
 			errs = append(errs, err)
 		}
-		// Prepare bootstrap config if needed
-		if jail.Bootstrap != nil && jail.Bootstrap.User != nil {
-			for username, user := range *jail.Bootstrap.User {
+		// Prepare jail configuration if needed
+		if jail.Configure != nil && jail.Configure.User != nil {
+			for username, user := range *jail.Configure.User {
 				user.Username = username
 				user.setDefaults()
 			}
@@ -108,7 +108,7 @@ func (jc *JailConfigs) Generate(c *Config) (errs []error) {
 	}
 
 	errs = append(errs, ExecTemplates(jails, JailConf)...)
-	errs = append(errs, ExecMultiTemplates(jails, c.jailKeys, JailInit, JailBootstrap)...)
+	errs = append(errs, ExecMultiTemplates(jails, c.jailKeys, JailInit, JailConfigure)...)
 
 	return errs
 }

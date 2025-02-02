@@ -6,19 +6,19 @@ import (
 	"path"
 )
 
-// BootstrapConfig - Configuration for bootstrapping jail(s) (jail-{name}-bootstrap.sh) or a FreeBSD image (img-bootstrap.sh)
-type BootstrapConfig struct {
+// JailConfiguration - Configuration for configuring jail systems/templates (jail-{name}-configure.sh) or a FreeBSD image (img-bootstrap.sh)
+type JailConfiguration struct {
 	Packages   []string // FreeBSD packages to be installed on the target using `pkg`
-	User       *BootstrapUsers
+	User       *UserConfigurations
 	PasswdFile string // Path to bootstrap user password file (default: .secret/jmake.passwd)
 
-	userKeys []string // Key order for User field
+	userKeys []string // Key order for User field (TODO)
 }
 
-type BootstrapUsers map[string]*BootstrapUser
+type UserConfigurations map[string]*UserConfiguration
 
-// Information used to boostrap a user account. See PasswdFile for setting this user's password
-type BootstrapUser struct {
+// Information used to configure a user account. See PasswdFile for setting this user's password
+type UserConfiguration struct {
 	Username string `toml:"-"` // Username [parsed from toml key]
 	FullName string // User full name (default: none)
 
@@ -43,7 +43,7 @@ type BootstrapUser struct {
 }
 
 // Set default values where applicable
-func (u *BootstrapUser) setDefaults() {
+func (u *UserConfiguration) setDefaults() {
 	if u.CreateHome == nil {
 		u.CreateHome = new(bool)
 		*u.CreateHome = true
@@ -57,6 +57,6 @@ func (u *BootstrapUser) setDefaults() {
 }
 
 // Get HomePerms as an octal for use in pw useradd/usermod commands
-func (u *BootstrapUser) HomePermString() string {
+func (u *UserConfiguration) HomePermString() string {
 	return fmt.Sprintf("%o", u.HomePerms)
 }

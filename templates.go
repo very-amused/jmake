@@ -15,13 +15,13 @@ const (
 	ImgInit      = "img-init.sh.template"
 	ImgStatus    = "img-status.sh.template"
 	ImgRemove    = "img-remove.sh.template"
-	ImgBootstrap = "img-bootstrap.sh.template"
+	ImgConfigure = "img-configure.sh.template"
 
 	BridgeRC = "bridge.rc.conf.template"
 
 	JailInit      = "jail-init.sh.template"
-	JailBootstrap = "jail-bootstrap.sh.template"
-	JailConf      = "jail.conf.template"
+	JailConf      = "jail.conf.template"         // Template for generating /etc/jail.conf
+	JailConfigure = "jail-configure.sh.template" // Template for generating jail-configure-{name}.sh scripts
 )
 
 // Get a template's output filename

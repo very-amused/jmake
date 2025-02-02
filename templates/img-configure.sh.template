@@ -1,6 +1,6 @@
 {{.NeedsRoot}}
-# Bootstrap (customize) an already initialized FreeBSD {{.Release}} image for jail deployment
-# Start bootstrap from vanilla snapshot (fails if jails depend on a snapshot newer than vanilla)
+# Configure an initailized jail template image
+# Start from vanilla snapshot (fails if jails depend on a snapshot newer than vanilla)
 zfs rollback -r {{.Dataset}}@vanilla
 {{.CheckResult}}
 mount -t devfs none {{.Path}}/dev # Mount chroot devfs (needed for chroot commands to work)
@@ -8,15 +8,15 @@ mount -t devfs none {{.Path}}/dev # Mount chroot devfs (needed for chroot comman
 devfs -m {{.Path}}/dev rule -s 4 applyset # Apply devfs ruleset 4 to chroot devfs
 {{.CheckResult}}
 
+{{if .Configure.Packages}}
 chroot {{.Path}} pkg bootstrap # Bootstrap the pkg binary package manager
-{{if .Bootstrap.Packages}}
-chroot {{.Path}} pkg install {{range .Bootstrap.Packages}}{{.}} {{end}} # Install packages
+chroot {{.Path}} pkg install {{range .Configure.Packages}}{{.}} {{end}} # Install packages
 {{end}}
 
 {{$path := .Path}}
-{{if .Bootstrap.User}}
+{{if .Configure.User}}
 # NOTE: I don't know why pw can't locate the shell on its own here (-s line)
-{{range .Bootstrap.User}}
+{{range .Configure.User}}
 # Create user {{.Username}}
 chroot {{$path}} pw useradd -n {{.Username}} \
 	{{if .Uid}}-u {{.Uid}}{{end}} \
@@ -27,7 +27,7 @@ chroot {{$path}} pw useradd -n {{.Username}} \
 	{{if .CreateHome}}-m \
 	-d {{.HomeDir}} \
 	-M {{.HomePermString}}{{end}} \
-	-w no # Don't set user password, this will be done later on during jail bootstrapping
+	-w no # Use passwd to set user password when in jail-configure
 # Lock user {{.Username}}
 chroot {{$path}} pw lock {{.Username}}
 {{$homedir := .HomeDir}}
@@ -43,5 +43,5 @@ chroot {{$path}} chown -R {{$username}}:{{$username}} {{$homedir}}/{{.}}
 # Unmount chroot devfs
 umount {{.Path}}/dev
 
-# Snapshot bootstrapped image
+# Snapshot configured image
 zfs snapshot {{.Dataset}}@{{.Snapshot}}

@@ -11,7 +11,7 @@ type ImgConfig struct {
 	Arch     string // FreeBSD architecture string (default: "amd64/amd64")
 	Mirror   string // FreeBSD download mirror (default: https://download.freebsd.org/ftp/releases/)
 
-	Bootstrap *BootstrapConfig // Optional image bootstrap options
+	Configure *JailConfiguration // Optional image configuration
 
 	ContextChecks
 
@@ -60,14 +60,14 @@ func (img *ImgConfig) Generate(c *Config) (errs []error) {
 	}
 
 	errs = append(errs, ExecTemplates(img, ImgInit, ImgStatus, ImgRemove)...)
-	if img.Bootstrap != nil {
-		if img.Bootstrap.User != nil {
-			for username, user := range *img.Bootstrap.User {
+	if img.Configure != nil {
+		if img.Configure.User != nil {
+			for username, user := range *img.Configure.User {
 				user.Username = username
 				user.setDefaults()
 			}
 		}
-		errs = append(errs, ExecTemplates(img, ImgBootstrap)...)
+		errs = append(errs, ExecTemplates(img, ImgConfigure)...)
 	}
 	return errs
 }
